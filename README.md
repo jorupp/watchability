@@ -2,7 +2,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Goals
 
-Create a spoiler-free site to use information about games that have already completed to evaluate how "watchable" they are.  This is not intended to be _predictive_ of how watchable a game will be, but rather to evaluate how watchable it _was_ and show a number that you can use to decide whether to watch an arleady-recorded game without giving away the winner or how they won.
+Create a spoiler-free site to use information about games that have already completed to evaluate how "watchable" they are.  This is not intended to be _predictive_ of how watchable a game will be, but rather to evaluate how watchable it _was_ and show a number that you can use to decide whether to watch an already-recorded game without giving away the winner or how they won.
 
 Intended sources: 
 - <https://github.com/pseudo-r/Public-ESPN-API>
@@ -10,12 +10,25 @@ Intended sources:
 Intended criteria:
  - Win probability over time
    - average of losing team's WP
-   - total of absolute value of all changes in WP
+   - total of absolute value of all changes in WP (or maybe average?)
    - initial WP of eventual loser
+   - max WP of losing team after X% of game remaining
+ - Final score doesn't seem like it'd be helpful - WP should be much better and not subject to late-game scoring quirks or the power of possession.
 
 Side goals:
 - Learn more about how next 15's caching stuff works and how I can use it for custom stuff (ie. caching calls for already-complete games).
+  - <https://nextjs.org/docs/app/api-reference/functions/unstable_cache>
+  - ie. can we cache the content and invalidate it if we notice the game's not over yet (via `revalidateTag`), but otherwise keep it cached for a while?
+- How much of this can I generate with Cursor?
 
+Plan:
+- [ ] Generate services and typings to call the ESPN APIs that look potentially useful
+- [ ] Get lists of sports/leagues/events to display
+- [ ] Identify complete/incomplete events
+- [ ] Load game data via cache
+- [ ] Calculate watchability score options
+- [ ] Display several approaches to calculate watchability score on a list of games for a day
+- [ ] Narrow down which approach works best and use it
 
 ## Getting Started
 

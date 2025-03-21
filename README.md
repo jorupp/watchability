@@ -1,5 +1,22 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Goals
+
+Create a spoiler-free site to use information about games that have already completed to evaluate how "watchable" they are.  This is not intended to be _predictive_ of how watchable a game will be, but rather to evaluate how watchable it _was_ and show a number that you can use to decide whether to watch an arleady-recorded game without giving away the winner or how they won.
+
+Intended sources: 
+- <https://github.com/pseudo-r/Public-ESPN-API>
+
+Intended criteria:
+ - Win probability over time
+   - average of losing team's WP
+   - total of absolute value of all changes in WP
+   - initial WP of eventual loser
+
+Side goals:
+- Learn more about how next 15's caching stuff works and how I can use it for custom stuff (ie. caching calls for already-complete games).
+
+
 ## Getting Started
 
 First, run the development server:

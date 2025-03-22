@@ -1,5 +1,6 @@
 import { Table, TableCell, TableRow } from "@/components/ui/table";
 import { getScoreboard } from "@/services/espn";
+import Link from "next/link";
 
 const CalendarPage = async ({ params }: {params: Promise<{ sport: string, league: string, date: string }>}) => {
     const { sport, league, date } = await params;
@@ -14,7 +15,7 @@ const CalendarPage = async ({ params }: {params: Promise<{ sport: string, league
                     const t2 = event.competitions[0].competitors[0];
                     return (
                     <TableRow key={event.id}>
-                        <TableCell>{event.shortName}</TableCell>
+                        <TableCell><Link href={`/${sport}/${league}/${date}/${event.id}`}>{event.shortName}</Link></TableCell>
                         <TableCell>{t1.homeAway}: {t1.curatedRank.current} {t1.team.displayName}</TableCell>
                         <TableCell>{t2.homeAway}: {t2.curatedRank.current} {t2.team.displayName}</TableCell>
                     </TableRow>

@@ -10,6 +10,7 @@
     "build-types": "node build-types.mjs"
   },
   "dependencies": {
+    "@radix-ui/react-tooltip": "^1.1.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lodash": "^4.17.21",

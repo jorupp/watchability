@@ -1,0 +1,76 @@
+import { RootObject as Game } from "@/types/game";
+import { groupBy, max, min, range, zip } from 'lodash';
+
+export interface AnalysisResult {
+    avgLoserWP: number;
+    maxLoserWP: number;
+    totalChange: number;
+    avgChangePerPlay: number;
+    numPlays: number;
+    maxLoserWPAfter50Pct: number;
+    maxLoserWPAfter75Pct: number;
+    maxLoserWPAfter90Pct: number;
+    maxLoserWPAfter95Pct: number;
+    maxLoserWPAfter975Pct: number;
+    scoreParts: number[];
+    score: number;
+}
+
+function parseClock(clck: string) {
+    const [minutes, seconds] = clck.split(':').map(Number);
+    return minutes * 60 + seconds;
+}
+
+export function analyzeGame(game: Game): AnalysisResult {
+    const plays = game.page.content.gamepackage.plys;
+    const winner = plays[plays.length - 1].team;
+    const totalP = max(plays.map(i => i.prd)) || 0;
+    const maxClockPerP = Object.fromEntries(Object.entries(groupBy(plays, 'prd')).map(([prd, plays]) => ([prd, max(plays.map(i => parseClock(i.clck))) || 0])));
+    // given a period and clock, calculate the percentage of the game that has been played, assuming all periods are equal-length (this gives extra bias to overtimes, but overtimes are good, so that's good)
+    function getGamePct(prd: number, clck: string) {
+        const maxClock = maxClockPerP[prd];
+        const clckSec = parseClock(clck);
+        return ((maxClock - clckSec) / maxClock)/totalP + (prd-1)/totalP;
+    }
+    const simpleLoserWP = plays.map(({team, wnPrb, prd, clck}) => ({wnPrb: team !== winner ? wnPrb || 0 : 100-(wnPrb || 0), gamePct: getGamePct(prd, clck) }));
+    const avgLoserWP = simpleLoserWP.reduce((acc, {wnPrb}) => acc + wnPrb, 0) / simpleLoserWP.length;
+    const maxLoserWP = max(simpleLoserWP.map(i => i.wnPrb)) || 0;
+    const totalChange = zip(simpleLoserWP.slice(0, -1), simpleLoserWP.slice(1)).reduce((acc, [a, b]) => acc + Math.abs((b?.wnPrb || 0) - (a?.wnPrb || 0)), 0);
+    const numPlays = simpleLoserWP.length;
+    const avgChangePerPlay = totalChange / numPlays;
+    // In a 2x20m game, these are at 20:00, 10:00, 4:00, 2:00, and 1:00 left in the game
+    const maxLoserWPAfter50Pct = max(simpleLoserWP.filter(i => i.gamePct > 0.5).map(i => i.wnPrb)) || 0;
+    const maxLoserWPAfter75Pct = max(simpleLoserWP.filter(i => i.gamePct > 0.75).map(i => i.wnPrb)) || 0;
+    const maxLoserWPAfter90Pct = max(simpleLoserWP.filter(i => i.gamePct > 0.9).map(i => i.wnPrb)) || 0;
+    const maxLoserWPAfter95Pct = max(simpleLoserWP.filter(i => i.gamePct > 0.95).map(i => i.wnPrb)) || 0;
+    const maxLoserWPAfter975Pct = max(simpleLoserWP.filter(i => i.gamePct > 0.975).map(i => i.wnPrb)) || 0;
+
+    // things that likely indicate a good game:
+    //   - maxLoserWP over 80 (this catches blowouts by underdogs, like McNeese vs. Clemson)
+    //   - high avgChangePerPlay (likely indicates a lot of late swings - will confim with Arkansas vs. Kansas)
+    //   - high maxLoserWPAfter90Pct (is game competitive in the last 4:00 - will confirm with UC San Diego vs. Michigan)
+    // each part should be 0-100, and we'll take the max
+    const scoreParts = [
+        // scale maxLoserWPs over 60 to 0-100
+        Math.max(0, maxLoserWP - 60)/40*100,
+        // scale avgChangePerPlay between 1 and 3 (clamped) to 0-100
+        Math.max(0, Math.min(avgChangePerPlay, 3) - 1)/2*100,
+        maxLoserWPAfter90Pct,
+    ];
+    const score = max(scoreParts) || 0;
+
+    return {
+        avgLoserWP,
+        maxLoserWP,
+        totalChange,
+        avgChangePerPlay,
+        numPlays,
+        maxLoserWPAfter50Pct,
+        maxLoserWPAfter75Pct,
+        maxLoserWPAfter90Pct,
+        maxLoserWPAfter95Pct,
+        maxLoserWPAfter975Pct,
+        scoreParts,
+        score,
+    };
+}

@@ -320,8 +320,8 @@ export interface LastPlay {
   type: Type3;
   text: string;
   scoreValue: number;
-  team?: Venue2;
-  probability?: Probability;
+  team: Venue2;
+  probability: Probability;
   athletesInvolved?: AthletesInvolved[];
 }
 export interface AthletesInvolved {

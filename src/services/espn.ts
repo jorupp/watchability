@@ -6,13 +6,15 @@ const apiRootUrl = "https://site.api.espn.com/apis/site";
 const siteRootUrl = "https://www.espn.com";
 
 export async function getSports(): Promise<string[]> {
-    return ['basketball'];
+    return ['basketball', 'football'];
 }
 
 export async function getLeagues(sport: string): Promise<string[]> {
     switch(sport) {
         case 'basketball':
-            return ['mens-college-basketball'];
+            return ['mens-college-basketball', 'womens-college-basketball'];
+        case 'football':
+            return ['nfl', 'college-football'];
         default:
             return [];
     }

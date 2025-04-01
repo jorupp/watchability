@@ -10,8 +10,10 @@ const CalendarPage = async ({ params }: {params: Promise<{ sport: string, league
             <h1>Calendar</h1>
             <ul>
                 {calendar.map((date) => (
-                    <li key={date}>
-                        <Link href={`/${sport}/${league}/${date.split('T')[0].replaceAll('-','')}`}>{date}</Link>
+                    (typeof date === 'string') ? <li key={date}>
+                        <Link href={`/${sport}/${league}/${date.split('T')[0].replaceAll('-','')}`} className="text-blue-500 hover:underline">{date}</Link>
+                    </li> : <li key={date.value}>
+                        TODO: add support for NFL/CFB-style season
                     </li>
                 ))}
             </ul>

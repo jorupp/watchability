@@ -474,7 +474,20 @@ export interface League {
   calendarIsWhitelist: boolean;
   calendarStartDate: string;
   calendarEndDate: string;
-  calendar: string[];
+  calendar: string[] | Calendar[];
+}
+export interface Calendar {
+  label: string;
+  value: string;
+  startDate: string;
+  endDate: string;
+  entries: Entry[];
+}
+export interface Entry {
+  label: string;
+  value: string;
+  startDate: string;
+  endDate: string;
 }
 export interface Logo {
   href: string;

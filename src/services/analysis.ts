@@ -14,6 +14,7 @@ export interface AnalysisResult {
     maxLoserWPAfter975Pct: number;
     scoreParts: number[];
     score: number;
+    winProbHistogram: number[];
 }
 
 function parseClock(clck: string) {
@@ -32,6 +33,7 @@ export function analyzeGame(game: Game): AnalysisResult {
         const clckSec = parseClock(clck);
         return ((maxClock - clckSec) / maxClock)/totalP + (prd-1)/totalP;
     }
+    const lowerWinProb = plays.map(({ wnPrb, prd, clck}) => ({wnPrb: 100-(wnPrb || 100), gamePct: getGamePct(prd, clck) }));
     const simpleLoserWP = plays.map(({team, wnPrb, prd, clck}) => ({wnPrb: team !== winner ? wnPrb || 0 : 100-(wnPrb || 0), gamePct: getGamePct(prd, clck) }));
     const avgLoserWP = simpleLoserWP.reduce((acc, {wnPrb}) => acc + wnPrb, 0) / simpleLoserWP.length;
     const maxLoserWP = max(simpleLoserWP.map(i => i.wnPrb)) || 0;
@@ -45,6 +47,11 @@ export function analyzeGame(game: Game): AnalysisResult {
     const maxLoserWPAfter95Pct = max(simpleLoserWP.filter(i => i.gamePct > 0.95).map(i => i.wnPrb)) || 0;
     const maxLoserWPAfter975Pct = max(simpleLoserWP.filter(i => i.gamePct > 0.975).map(i => i.wnPrb)) || 0;
 
+    // histogram of win probability at 5% intervals normalized by number of plays
+    const winProbHistogram = range(45, -1, -5).map(threshold => {
+        return lowerWinProb.filter(i => (i.wnPrb > threshold && i.wnPrb <= threshold + 5) || (i.wnPrb === 0 && threshold === 0)).length / numPlays;
+    });
+
     // things that likely indicate a good game:
     //   - maxLoserWP over 80 (this catches blowouts by underdogs, like McNeese vs. Clemson)
     //   - high avgChangePerPlay (likely indicates a lot of late swings - will confim with Arkansas vs. Kansas)
@@ -56,6 +63,8 @@ export function analyzeGame(game: Game): AnalysisResult {
         // scale avgChangePerPlay between 0.5 and 2.5 (clamped) to 0-100
         Math.max(0, Math.min(avgChangePerPlay, 2.5) - 0.5)/2*100,
         maxLoserWPAfter90Pct,
+        // pct of time in top two buckets of win probabilities, 2x 45-50 + 1x 40-45
+        Math.min(100, (winProbHistogram[0] * 2 + winProbHistogram[1])*100)
     ];
     // don't want to strictly take the max, because we want to reward games that are good in multiple ways, but don't want to under-reward games good in only one way
     // so we'll take the max + 20% of the sum of the other parts
@@ -76,5 +85,6 @@ export function analyzeGame(game: Game): AnalysisResult {
         maxLoserWPAfter975Pct,
         scoreParts,
         score,
+        winProbHistogram,
     };
 }

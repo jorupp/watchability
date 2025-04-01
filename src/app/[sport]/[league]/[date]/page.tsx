@@ -37,9 +37,11 @@ const CalendarPage = async ({ params }: {params: Promise<{ sport: string, league
                     {augmentedEvents.map((event) => {
                         const t1 = event.competitions[0].competitors[1];
                         const t2 = event.competitions[0].competitors[0];
+                        const date = new Date(event.date);
                         return (
                             <TableRow key={event.id}>
-                                <TableCell><Link href={`/${sport}/${league}/${date}/${event.id}`}>{event.shortName}</Link></TableCell>
+                                <TableCell>{date.toLocaleTimeString()}</TableCell>
+                                <TableCell><Link href={`/${sport}/${league}/${date}/${event.id}`} className="text-blue-500 hover:underline">{event.shortName}</Link></TableCell>
                                 <TableCell>{t1.homeAway}: {t1.curatedRank.current} {t1.team.displayName}</TableCell>
                                 <TableCell>{t2.homeAway}: {t2.curatedRank.current} {t2.team.displayName}</TableCell>
                                 <TableCell>

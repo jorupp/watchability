@@ -45,15 +45,16 @@ const CalendarPage = async ({ params }: {params: Promise<{ sport: string, league
                                 <TableCell>
                                     <Tooltip>
                                         <TooltipTrigger>
-                                            {event.analysis.score.toFixed(2)}
+                                            {/* cap at 80 to avoid giving away whether there are multiple factors at play and, how extreme any comeback is, or how late it will be */}
+                                            {Math.min(80, event.analysis.score).toFixed(2)}
                                         </TooltipTrigger>
                                         <TooltipContent>
                                             <pre>{JSON.stringify(event.analysis, null, 2)}</pre>
                                         </TooltipContent>
                                     </Tooltip>
                                 </TableCell>
-                                <TableCell>{event.analysis.avgChangePerPlay.toFixed(2)}</TableCell>
-                                <TableCell>{event.analysis.maxLoserWPAfter90Pct.toFixed(0)}</TableCell>
+                                {/* <TableCell>{event.analysis.avgChangePerPlay.toFixed(2)}</TableCell> */}
+                                {/* <TableCell>{event.analysis.maxLoserWPAfter90Pct.toFixed(0)}</TableCell> */}
                                 {/* <TableCell><pre>{JSON.stringify(event.analysis, null, 2)}</pre></TableCell> */}
                                 {/* {Object.entries(event.analysis).map(([key, value]) => (
                                     <TableCell key={key}>{
@@ -69,7 +70,7 @@ const CalendarPage = async ({ params }: {params: Promise<{ sport: string, league
                     })}
                 </TableBody>
             </Table>
-            <pre>{JSON.stringify(events, null, 2)}</pre>
+            {/* <pre>{JSON.stringify(events, null, 2)}</pre> */}
         </div>
         </TooltipProvider>
     );

@@ -1,6 +1,7 @@
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { analyzeGame } from "@/services/analysis";
-import { getGame, getScoreboard } from "@/services/espn";
+import { getGame, getGameUrl } from "@/services/espn";
+import Link from "next/link";
 
 const GamePage = async ({ params }: {params: Promise<{ league: string, gameId: string }>}) => {
     const { league, gameId } = await params;
@@ -9,6 +10,9 @@ const GamePage = async ({ params }: {params: Promise<{ league: string, gameId: s
     const analysis = analyzeGame(game);
     return (
         <>
+            <Link href={getGameUrl(league, gameId)} className="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">
+                ESPN game link
+            </Link>
             <pre>{JSON.stringify(analysis, null, 2)}</pre>
             <Table>
                 <TableBody>

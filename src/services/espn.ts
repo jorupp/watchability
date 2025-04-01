@@ -26,8 +26,13 @@ export function getScoreboard(sport: string, league: string, dates?: string): Pr
         .then(data => data as Scoreboard);
 }
 
-export async function getGame(league: string, gameId: string): Promise<Game> {
+export function getGameUrl(league: string, gameId: string): string {
     const url = `${siteRootUrl}/${league}/game/_/gameId/${gameId}`;
+    return url;
+}
+
+export async function getGame(league: string, gameId: string): Promise<Game> {
+    const url = getGameUrl(league, gameId);
 
     const response = await fetch(url);
     const html = await response.text();

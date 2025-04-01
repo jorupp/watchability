@@ -51,13 +51,17 @@ export function analyzeGame(game: Game): AnalysisResult {
     //   - high maxLoserWPAfter90Pct (is game competitive in the last 4:00 - will confirm with UC San Diego vs. Michigan)
     // each part should be 0-100, and we'll take the max
     const scoreParts = [
-        // scale maxLoserWPs over 60 to 0-100
-        Math.max(0, maxLoserWP - 60)/40*100,
-        // scale avgChangePerPlay between 1 and 3 (clamped) to 0-100
-        Math.max(0, Math.min(avgChangePerPlay, 3) - 1)/2*100,
+        // scale maxLoserWPs 60-90 (clamped) to 0-100
+        Math.max(0, Math.min(maxLoserWP, 90) - 60)/30*100,
+        // scale avgChangePerPlay between 0.5 and 2.5 (clamped) to 0-100
+        Math.max(0, Math.min(avgChangePerPlay, 2.5) - 0.5)/2*100,
         maxLoserWPAfter90Pct,
     ];
-    const score = max(scoreParts) || 0;
+    // don't want to strictly take the max, because we want to reward games that are good in multiple ways, but don't want to under-reward games good in only one way
+    // so we'll take the max + 20% of the sum of the other parts
+    // this makes the maximum possible score 140 (100% for all components), but that's fine
+    const maxScore = max(scoreParts)!;
+    const score = maxScore + 0.2 * (scoreParts.reduce((acc, i) => acc + i, 0) -maxScore);
 
     return {
         avgLoserWP,

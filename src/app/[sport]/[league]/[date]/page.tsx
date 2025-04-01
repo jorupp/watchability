@@ -44,11 +44,11 @@ const CalendarPage = async ({ params }: {params: Promise<{ sport: string, league
                                 <TableCell><Link href={`/${sport}/${league}/${date}/${event.id}`} className="text-blue-500 hover:underline">{event.shortName}</Link></TableCell>
                                 <TableCell>{t1.homeAway}: {t1.curatedRank.current} {t1.team.displayName}</TableCell>
                                 <TableCell>{t2.homeAway}: {t2.curatedRank.current} {t2.team.displayName}</TableCell>
-                                <TableCell>
+                                <TableCell className="text-right">
                                     <Tooltip>
                                         <TooltipTrigger>
-                                            {/* cap at 80 to avoid giving away whether there are multiple factors at play and, how extreme any comeback is, or how late it will be */}
-                                            {Math.min(80, event.analysis.score).toFixed(2)}
+                                            {/* cap at 100 to avoid giving away whether there are multiple factors at play and, how extreme any comeback is, or how late it will be */}
+                                            {Math.min(100, event.analysis.score).toFixed(2)}
                                         </TooltipTrigger>
                                         <TooltipContent>
                                             <pre>{JSON.stringify(event.analysis, null, 2)}</pre>

@@ -1,5 +1,5 @@
 import { RootObject as Game } from "@/types/game";
-import { groupBy, max, min, range, zip } from 'lodash';
+import { groupBy, last, max, min, range, takeWhile, zip } from 'lodash';
 
 export interface AnalysisResult {
     avgLoserWP: number;
@@ -15,6 +15,7 @@ export interface AnalysisResult {
     scoreParts: number[];
     score: number;
     winProbHistogram: number[];
+    numberOfRuns: number;
 }
 
 function parseClock(clck: string) {
@@ -23,7 +24,7 @@ function parseClock(clck: string) {
 }
 
 export function analyzeGame(game: Game): AnalysisResult {
-    const plays = game.page.content.gamepackage.plys;
+    const plays = game.page.content.gamepackage.plys.filter(i => i.wnPrb !== undefined && i.wnPrb !== null && i.clck !== undefined && i.prd !== undefined); // only consider plays with win probability and clock defined
     const winner = plays[plays.length - 1].team;
     const totalP = max(plays.map(i => i.prd)) || 0;
     const maxClockPerP = Object.fromEntries(Object.entries(groupBy(plays, 'prd')).map(([prd, plays]) => ([prd, max(plays.map(i => parseClock(i.clck))) || 0])));
@@ -51,6 +52,13 @@ export function analyzeGame(game: Game): AnalysisResult {
     const winProbHistogram = range(45, -1, -5).map(threshold => {
         return lowerWinProb.filter(i => (i.wnPrb > threshold && i.wnPrb <= threshold + 5) || (i.wnPrb === 0 && threshold === 0)).length / numPlays;
     });
+
+    // TODO: find a way to analyze runs - ie. https://www.espn.com/mens-college-basketball/game/_/gameId/401746069 had a 20-2 run to flip the WP from 84.5% to 7.3% in 5:00
+    // how do we define a "run"?
+    // change in WP is at least 20%, lasts at least 7.5% of game (ie. 3:00)
+    //   how do we decide exactly what play starts/ends the run?
+    //   look at every N-play sequence where abs(WP change) is at least Y.  Merge together overlapping sequences with WP change in same direction
+    const runs = findRuns(simpleLoserWP, 20, 0.075);
 
     // things that likely indicate a good game:
     //   - maxLoserWP over 80 (this catches blowouts by underdogs, like McNeese vs. Clemson)
@@ -86,5 +94,44 @@ export function analyzeGame(game: Game): AnalysisResult {
         scoreParts,
         score,
         winProbHistogram,
+        numberOfRuns: runs.length,
     };
+}
+
+function findRuns(simpleLoserWP: { wnPrb: number; gamePct: number; }[], minChange: number, minLength: number) {
+    const runs : {start: number, end: number, startWnPrb: number, endWnPrb: number, change: number}[] = [];
+    for(const i of range(0, simpleLoserWP.length - 1)) {
+        const start = simpleLoserWP[i];
+        const end = last(takeWhile(simpleLoserWP, i => i.gamePct < start.gamePct + minLength)) || simpleLoserWP[simpleLoserWP.length - 1];
+        const change = end.wnPrb - start.wnPrb;
+        if (Math.abs(change) >= minChange) {
+            runs.push({
+                start: start.gamePct,
+                startWnPrb: start.wnPrb,
+                end: end.gamePct,
+                endWnPrb: end.wnPrb,
+                change,
+            });
+        }
+    }
+
+    // return runs;
+
+    // merge overlapping runs
+    const mergedRuns: {start: number, end: number, startWnPrb: number, endWnPrb: number, change: number}[] = [];
+    for (const run of runs) {
+        // new run if first, non-overlapping, or different sign of change
+        if (mergedRuns.length === 0 || mergedRuns[mergedRuns.length - 1].end < run.start || mergedRuns[mergedRuns.length - 1].change * run.change < 0) {
+            mergedRuns.push(run);
+        } else {
+            const lastRun = mergedRuns[mergedRuns.length - 1];
+            lastRun.end = Math.max(lastRun.end, run.end);
+            lastRun.endWnPrb = run.endWnPrb; // update to the end WP of the last run
+            lastRun.change = lastRun.endWnPrb - lastRun.startWnPrb; // recalculate the change based on the new end WP
+        }
+    }
+    
+    // TODO: try to shorten runs to the maximum delta
+
+    return mergedRuns;
 }

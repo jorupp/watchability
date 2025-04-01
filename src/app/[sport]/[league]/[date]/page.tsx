@@ -22,6 +22,10 @@ const CalendarPage = async ({ params }: {params: Promise<{ sport: string, league
         <TooltipProvider>
         <div>
             <h1>Calendar for {date}</h1>
+            <p className="flex gap-2">
+                <Link href={`/${sport}/${league}/${parseInt(date)-1}`} className="text-blue-500 hover:underline">Previous</Link>
+                <Link href={`/${sport}/${league}/${parseInt(date)+1}`} className="text-blue-500 hover:underline">Next</Link>
+            </p>
             <Table>
                 <TableHeader>
                     <TableRow>

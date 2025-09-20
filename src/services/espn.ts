@@ -20,8 +20,8 @@ export async function getLeagues(sport: string): Promise<string[]> {
     }
 }
 
-export function getScoreboard(sport: string, league: string, dates?: string): Promise<Scoreboard> {
-    const url = `${apiRootUrl}/v2/sports/${sport}/${league}/scoreboard${dates ? `?dates=${dates}` : ''}`;
+export function getScoreboard(sport: string, league: string, dates?: string, week?: string): Promise<Scoreboard> {
+    const url = `${apiRootUrl}/v2/sports/${sport}/${league}/scoreboard${dates ? `?dates=${dates}` : ''}${week ? `?week=${week}` : ''}`;
     console.log(url);
     return fetch(url)
         .then(response => response.json())

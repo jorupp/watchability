@@ -1,5 +1,6 @@
 import { getScoreboard } from "@/services/espn";
 import Link from "next/link";
+import { Fragment } from "react";
 
 const CalendarPage = async ({ params }: {params: Promise<{ sport: string, league: string }>}) => {
     const { sport, league } = await params;
@@ -9,12 +10,16 @@ const CalendarPage = async ({ params }: {params: Promise<{ sport: string, league
         <div>
             <h1>Calendar</h1>
             <ul>
-                {calendar.map((date) => (
+                {calendar.map((date,ix) => (
                     (typeof date === 'string') ? <li key={date}>
-                        <Link href={`/${sport}/${league}/${date.split('T')[0].replaceAll('-','')}`} className="text-blue-500 hover:underline">{date}</Link>
-                    </li> : <li key={date.value}>
-                        TODO: add support for NFL/CFB-style season
-                    </li>
+                        <Link href={`/${sport}/${league}/date/${date.split('T')[0].replaceAll('-','')}`} className="text-blue-500 hover:underline">{date}</Link>
+                    </li> : <Fragment key={ix}>
+                        {date.entries.map(entry => (
+                            <li key={entry.value}>
+                                <Link href={`/${sport}/${league}/week/${entry.value}`} className="text-blue-500 hover:underline">{date.label}: {entry.label}</Link>
+                            </li>
+                        ))}
+                    </Fragment>
                 ))}
             </ul>
         </div>

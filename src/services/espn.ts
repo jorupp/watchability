@@ -41,7 +41,7 @@ export async function getGame(league: string, gameId: string): Promise<Game> {
     // scape the content out of the script tag in the page
     const match = html.match(/<script>window\['__CONFIG__'\]=.*;window\['__espnfitt__'\]=(.*?);<\/script>/);
     if (!match) {
-        throw new Error('Could not find __CONFIG__');
+        throw new Error(`Could not find __CONFIG__ in ${url}`);
     }
 
     const data = JSON.parse(match[1]);

@@ -193,6 +193,29 @@ export interface Gamepackage {
   plys: Ply[];
   wnPrb: WnPrb;
   meta: Meta2;
+  allDrives?: Drive[];
+}
+export interface Drive {
+  index: number;
+  identifier: string;
+  driveDetails: unknown;
+  lastPlay: LastPlay;
+  playerDetails: unknown;
+  participants: unknown[];
+  isLastPlay: boolean;
+}
+export interface LastPlay {
+  id: string;
+  winProbability: WinProbability;
+  playTitle: string;
+  timeLabel: string; // something like "14:46 - 1st"
+}
+export interface WinProbability {
+  isTie: false;
+  favoredTeamAbbrev: string;
+  favoredTeamLogo: string;
+  favoredTeamName: string;
+  favoredTeamWinPercentage: string; // this is a string like "85.3"
 }
 export interface Meta2 {
   stndngs: Stndngs;

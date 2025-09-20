@@ -13,10 +13,10 @@ const GamePage = async ({ params }: {params: Promise<{ league: string, gameId: s
             <Link href={getGameUrl(league, gameId)} className="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">
                 ESPN game link
             </Link>
-            <pre>{JSON.stringify(analysis, null, 2)}</pre>
+            <pre>{JSON.stringify(analysis || 'no analysis available - check the game page', null, 2)}</pre>
             <Table>
                 <TableBody>
-                    {plays.map((play) => {
+                    {plays?.map((play) => {
                         return (
                             <TableRow key={play.id}>
                                 <TableCell>P{play.prd} {play.clck}</TableCell>

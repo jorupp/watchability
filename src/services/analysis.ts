@@ -24,19 +24,41 @@ function parseClock(clck: string) {
 }
 
 export function analyzeGame(game: Game): AnalysisResult | null {
-    if(!game?.page?.content?.gamepackage?.plys) { return null; }
-    const plays = game.page.content.gamepackage.plys.filter(i => i.wnPrb !== undefined && i.wnPrb !== null && i.clck !== undefined && i.prd !== undefined); // only consider plays with win probability and clock defined
-    const winner = plays[plays.length - 1].team;
-    const totalP = max(plays.map(i => i.prd)) || 0;
-    const maxClockPerP = Object.fromEntries(Object.entries(groupBy(plays, 'prd')).map(([prd, plays]) => ([prd, max(plays.map(i => parseClock(i.clck))) || 0])));
-    // given a period and clock, calculate the percentage of the game that has been played, assuming all periods are equal-length (this gives extra bias to overtimes, but overtimes are good, so that's good)
-    function getGamePct(prd: number, clck: string) {
-        const maxClock = maxClockPerP[prd];
-        const clckSec = parseClock(clck);
-        return ((maxClock - clckSec) / maxClock)/totalP + (prd-1)/totalP;
+    if (game?.page?.content?.gamepackage?.allDrives) {
+        const basePlays = game.page.content.gamepackage.allDrives.map(i => i.lastPlay?.winProbability).filter(Boolean);
+        if (basePlays.length < 1) return null;
+        // gamePct will be simple - just number of plays
+        const plays = basePlays.map((i, ix) => ({ favoredTeam: i.favoredTeamAbbrev, wnPrb: parseFloat(i.favoredTeamWinPercentage), gamePct: ix / (basePlays.length - 1)}))
+        const winner = plays[plays.length - 1].favoredTeam;
+        const lowerWinProb = plays.map(({ wnPrb, gamePct }) => ({wnPrb: 100-(wnPrb || 100), gamePct }));
+        const simpleLoserWP = plays.map(({favoredTeam, wnPrb, gamePct}) => ({wnPrb: favoredTeam !== winner ? wnPrb || 0 : 100-(wnPrb || 0), gamePct }));
+        // football has fewer plays, so bigger wnPct changes are expected
+        return analyzeWinProb(lowerWinProb, simpleLoserWP, [2, 6]);
+    } else if(game?.page?.content?.gamepackage?.plys) {
+        const plays = game.page.content.gamepackage.plys.filter(i => i.wnPrb !== undefined && i.wnPrb !== null && i.clck !== undefined && i.prd !== undefined); // only consider plays with win probability and clock defined
+        const winner = plays[plays.length - 1].team;
+        const totalP = max(plays.map(i => i.prd)) || 0;
+        const maxClockPerP = Object.fromEntries(Object.entries(groupBy(plays, 'prd')).map(([prd, plays]) => ([prd, max(plays.map(i => parseClock(i.clck))) || 0])));
+        // given a period and clock, calculate the percentage of the game that has been played, assuming all periods are equal-length (this gives extra bias to overtimes, but overtimes are good, so that's good)
+        function getGamePct(prd: number, clck: string) {
+            const maxClock = maxClockPerP[prd];
+            const clckSec = parseClock(clck);
+            return ((maxClock - clckSec) / maxClock)/totalP + (prd-1)/totalP;
+        }
+        const lowerWinProb = plays.map(({ wnPrb, prd, clck}) => ({wnPrb: 100-(wnPrb || 100), gamePct: getGamePct(prd, clck) }));
+        const simpleLoserWP = plays.map(({team, wnPrb, prd, clck}) => ({wnPrb: team !== winner ? wnPrb || 0 : 100-(wnPrb || 0), gamePct: getGamePct(prd, clck) }));
+        // basketball has a lot of plays, so wnPct doesn't change much per play
+        return analyzeWinProb(lowerWinProb, simpleLoserWP, [0.5, 2.5]);
     }
-    const lowerWinProb = plays.map(({ wnPrb, prd, clck}) => ({wnPrb: 100-(wnPrb || 100), gamePct: getGamePct(prd, clck) }));
-    const simpleLoserWP = plays.map(({team, wnPrb, prd, clck}) => ({wnPrb: team !== winner ? wnPrb || 0 : 100-(wnPrb || 0), gamePct: getGamePct(prd, clck) }));
+    return null;
+}
+
+interface WinProbabilitySegment {
+    wnPrb: number; // win probability for the losing team (ie. 100 - winning team's win probability)
+    gamePct: number; // percentage of the game that has been played (0-1)
+}
+
+function analyzeWinProb(lowerWinProb: WinProbabilitySegment[], simpleLoserWP: WinProbabilitySegment[], changePerPlayRange: [number, number]): AnalysisResult | null {
     const avgLoserWP = simpleLoserWP.reduce((acc, {wnPrb}) => acc + wnPrb, 0) / simpleLoserWP.length;
     const maxLoserWP = max(simpleLoserWP.map(i => i.wnPrb)) || 0;
     const totalChange = zip(simpleLoserWP.slice(0, -1), simpleLoserWP.slice(1)).reduce((acc, [a, b]) => acc + Math.abs((b?.wnPrb || 0) - (a?.wnPrb || 0)), 0);
@@ -69,8 +91,8 @@ export function analyzeGame(game: Game): AnalysisResult | null {
     const scoreParts = [
         // scale maxLoserWPs 60-90 (clamped) to 0-100
         Math.max(0, Math.min(maxLoserWP, 90) - 60)/30*100,
-        // scale avgChangePerPlay between 0.5 and 2.5 (clamped) to 0-100
-        Math.max(0, Math.min(avgChangePerPlay, 2.5) - 0.5)/2*100,
+        // scale avgChangePerPlay between changePerPlayRange (clamped) to 0-100
+        Math.max(0, Math.min(avgChangePerPlay, changePerPlayRange[1]) - changePerPlayRange[0])/2*100,
         maxLoserWPAfter90Pct,
         // pct of time in top two buckets of win probabilities, 2x 45-50 + 1x 40-45
         Math.min(100, (winProbHistogram[0] * 2 + winProbHistogram[1])*100)

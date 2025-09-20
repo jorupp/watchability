@@ -52,17 +52,20 @@ const CalendarPage = async ({ params }: {params: Promise<{ sport: string, league
                                 <TableCell>{t1.homeAway}: {t1.curatedRank.current} {t1.team.displayName}</TableCell>
                                 <TableCell>{t2.homeAway}: {t2.curatedRank.current} {t2.team.displayName}</TableCell>
                                 <TableCell className="text-right">
-                                    <Tooltip>
-                                        <TooltipTrigger>
-                                            {/* cap at 100 to avoid giving away whether there are multiple factors at play and, how extreme any comeback is, or how late it will be */}
-                                            {Math.min(100, event.analysis.score).toFixed(2)}
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <pre>{JSON.stringify(event.analysis, null, 2)}</pre>
-                                        </TooltipContent>
-                                    </Tooltip>
+                                    {event.analysis ? (
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                {/* cap at 100 to avoid giving away whether there are multiple factors at play and, how extreme any comeback is, or how late it will be */}
+                                                {Math.min(100, event.analysis.score).toFixed(2)}
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <pre>{JSON.stringify(event.analysis, null, 2)}</pre>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    ) : null}
                                 </TableCell>
                                 <TableCell>
+                                    {event.analysis ? (
                                     <Tooltip>
                                         <TooltipTrigger>
                                             <ChartColumn className="h-4 mt-1" />
@@ -76,6 +79,7 @@ const CalendarPage = async ({ params }: {params: Promise<{ sport: string, league
                                             <Chart winProbHistogram={event.analysis.winProbHistogram} />
                                         </TooltipContent>
                                     </Tooltip>
+                                ) : null}
                                 </TableCell>
                                 {/* <TableCell>{event.analysis.avgChangePerPlay.toFixed(2)}</TableCell> */}
                                 {/* <TableCell>{event.analysis.maxLoserWPAfter90Pct.toFixed(0)}</TableCell> */}

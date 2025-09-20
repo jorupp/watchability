@@ -23,7 +23,8 @@ function parseClock(clck: string) {
     return minutes * 60 + seconds;
 }
 
-export function analyzeGame(game: Game): AnalysisResult {
+export function analyzeGame(game: Game): AnalysisResult | null {
+    if(!game?.page?.content?.gamepackage?.plys) { return null; }
     const plays = game.page.content.gamepackage.plys.filter(i => i.wnPrb !== undefined && i.wnPrb !== null && i.clck !== undefined && i.prd !== undefined); // only consider plays with win probability and clock defined
     const winner = plays[plays.length - 1].team;
     const totalP = max(plays.map(i => i.prd)) || 0;

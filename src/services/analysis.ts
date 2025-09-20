@@ -36,6 +36,7 @@ export function analyzeGame(game: Game): AnalysisResult | null {
         return analyzeWinProb(lowerWinProb, simpleLoserWP, [2, 6]);
     } else if(game?.page?.content?.gamepackage?.plys) {
         const plays = game.page.content.gamepackage.plys.filter(i => i.wnPrb !== undefined && i.wnPrb !== null && i.clck !== undefined && i.prd !== undefined); // only consider plays with win probability and clock defined
+        if (plays.length < 1) return null;
         const winner = plays[plays.length - 1].team;
         const totalP = max(plays.map(i => i.prd)) || 0;
         const maxClockPerP = Object.fromEntries(Object.entries(groupBy(plays, 'prd')).map(([prd, plays]) => ([prd, max(plays.map(i => parseClock(i.clck))) || 0])));

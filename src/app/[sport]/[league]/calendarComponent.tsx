@@ -8,7 +8,7 @@ import { ChartBar, ChartColumn } from "lucide-react";
 import { RootObject as Scoreboard } from "@/types/scoreboard";
 import { ReactNode } from "react";
 
-export const CalendarComponent = async ({ sport, league, scoreboard, header }: { sport: string, league: string, scoreboard: Scoreboard, header: ReactNode}) => {
+export const CalendarComponent = async ({ sport, league, scoreboard, header, showDate }: { sport: string, league: string, scoreboard: Scoreboard, header: ReactNode, showDate?: boolean}) => {
     const events = scoreboard.events.sort((a, b) => a.date.localeCompare(b.date));
     const augmentedEvents = await Promise.all(events.map(async (event) => {
         const game = await getGame(league, event.id);
@@ -43,7 +43,7 @@ export const CalendarComponent = async ({ sport, league, scoreboard, header }: {
                         const date = new Date(event.date);
                         return (
                             <TableRow key={event.id}>
-                                <TableCell>{date.toLocaleTimeString()}</TableCell>
+                                <TableCell>{showDate && date.toLocaleDateString()} {date.toLocaleTimeString()}</TableCell>
                                 <TableCell><Link href={`/${sport}/${league}/${event.id}`} className="text-blue-500 hover:underline">{event.shortName}</Link></TableCell>
                                 <TableCell>{t1.homeAway}: {t1.curatedRank.current} {t1.team.displayName}</TableCell>
                                 <TableCell>{t2.homeAway}: {t2.curatedRank.current} {t2.team.displayName}</TableCell>

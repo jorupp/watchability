@@ -5,7 +5,7 @@ import { CalendarComponent } from "../../calendarComponent";
 const CalendarPage = async ({ params }: {params: Promise<{ sport: string, league: string, week: string }>}) => {
     const { sport, league, week } = await params;
     const scoreboard = await getScoreboard(sport, league, undefined, week, '80');
-    return <CalendarComponent {...{sport, league, scoreboard }} header={
+    return <CalendarComponent {...{sport, league, scoreboard }} showDate header={
         <>
             <h1>Calendar for {week}</h1>
             <p className="flex gap-2">

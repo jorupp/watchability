@@ -4,7 +4,7 @@ import { analyzeGame } from "@/services/analysis";
 import { getGame, getScoreboard } from "@/services/espn";
 import Link from "next/link";
 import { Chart } from "./chart";
-import { ChartBar, ChartColumn } from "lucide-react";
+import { ChartColumn } from "lucide-react";
 import { RootObject as Scoreboard } from "@/types/scoreboard";
 import { ReactNode } from "react";
 
@@ -26,6 +26,7 @@ export const CalendarComponent = async ({ sport, league, scoreboard, header, sho
                 <TableHeader>
                     <TableRow>
                         <TableHead>Start Time</TableHead>
+                        <TableHead>Network</TableHead>
                         <TableHead>Event</TableHead>
                         <TableHead>Home</TableHead>
                         <TableHead>Away</TableHead>
@@ -44,6 +45,7 @@ export const CalendarComponent = async ({ sport, league, scoreboard, header, sho
                         return (
                             <TableRow key={event.id}>
                                 <TableCell>{showDate && date.toLocaleDateString()} {date.toLocaleTimeString()}</TableCell>
+                                <TableCell>{event.competitions[0]?.broadcast}</TableCell>
                                 <TableCell><Link href={`/${sport}/${league}/${event.id}`} className="text-blue-500 hover:underline">{event.shortName}</Link></TableCell>
                                 <TableCell>{t1.homeAway}: {t1.curatedRank.current} {t1.team.displayName}</TableCell>
                                 <TableCell>{t2.homeAway}: {t2.curatedRank.current} {t2.team.displayName}</TableCell>

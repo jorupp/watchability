@@ -4,7 +4,7 @@ import { CalendarComponent } from "../../calendarComponent";
 
 const CalendarPage = async ({ params }: {params: Promise<{ sport: string, league: string, week: string }>}) => {
     const { sport, league, week } = await params;
-    const scoreboard = await getScoreboard(sport, league, undefined, week);
+    const scoreboard = await getScoreboard(sport, league, undefined, week, '80');
     return <CalendarComponent {...{sport, league, scoreboard }} header={
         <>
             <h1>Calendar for {week}</h1>

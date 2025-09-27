@@ -28,6 +28,7 @@ export const CalendarComponent = async ({ sport, league, scoreboard, header, sho
                         <TableHead>Start Time</TableHead>
                         <TableHead>Network</TableHead>
                         <TableHead>Event</TableHead>
+                        <TableHead>R</TableHead>
                         <TableHead>Home</TableHead>
                         <TableHead>Away</TableHead>
                         <TableHead>Score</TableHead>
@@ -47,6 +48,11 @@ export const CalendarComponent = async ({ sport, league, scoreboard, header, sho
                                 <TableCell>{showDate && date.toLocaleDateString()} {date.toLocaleTimeString()}</TableCell>
                                 <TableCell>{event.competitions[0]?.broadcast}</TableCell>
                                 <TableCell><Link href={`/${sport}/${league}/${event.id}`} className="text-blue-500 hover:underline">{event.shortName}</Link></TableCell>
+                                <TableCell>
+                                    {t1.curatedRank.current < 99 && t2.curatedRank.current < 99 ? (
+                                        <span className="font-bold">{t1.curatedRank.current + t2.curatedRank.current}</span>
+                                    ) : null}
+                                </TableCell>
                                 <TableCell>{t1.homeAway}: {t1.curatedRank.current} {t1.team.displayName}</TableCell>
                                 <TableCell>{t2.homeAway}: {t2.curatedRank.current} {t2.team.displayName}</TableCell>
                                 <TableCell className="text-right">

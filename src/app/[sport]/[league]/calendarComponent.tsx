@@ -54,8 +54,8 @@ export const CalendarComponent = async ({ sport, league, scoreboard, header, sho
                                         <span className="font-bold">{t1.curatedRank.current + t2.curatedRank.current}</span>
                                     ) : null}
                                 </TableCell>
-                                <TableCell>{t1.homeAway}: {t1.curatedRank.current} {t1.team.displayName}</TableCell>
-                                <TableCell>{t2.homeAway}: {t2.curatedRank.current} {t2.team.displayName}</TableCell>
+                                <TableCell>{t1.homeAway}: {t1.curatedRank.current < 99 ? <b>{t1.curatedRank.current}</b> : null} {t1.team.displayName}</TableCell>
+                                <TableCell>{t2.homeAway}: {t2.curatedRank.current < 99 ? <b>{t2.curatedRank.current}</b> : null} {t2.team.displayName}</TableCell>
                                 <TableCell className="text-right">
                                     {event.analysis ? (
                                         <Tooltip>

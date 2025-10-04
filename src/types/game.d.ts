@@ -194,6 +194,17 @@ export interface Gamepackage {
   wnPrb: WnPrb;
   meta: Meta2;
   allDrives?: Drive[];
+  mtchpPrdctr: MtchpPrdctr;
+}
+export interface MtchpPrdctr {
+  disclaimerLink: string;
+  teams: MtchpPrdctrTeam[];
+}
+export interface MtchpPrdctrTeam {
+  value: number;
+  percentage: number;
+  team: string;
+  tmName: string;
 }
 export interface Drive {
   index: number;

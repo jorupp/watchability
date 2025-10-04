@@ -15,6 +15,7 @@ export const CalendarComponent = async ({ sport, league, scoreboard, header, sho
         const analysis = analyzeGame(game);
         return {
             ...event,
+            game,
             analysis,
         };
     }));
@@ -66,6 +67,8 @@ export const CalendarComponent = async ({ sport, league, scoreboard, header, sho
                                                 <pre>{JSON.stringify(event.analysis, null, 2)}</pre>
                                             </TooltipContent>
                                         </Tooltip>
+                                    ) : event.game ? (
+                                        <>PG: {(Math.min(...(event.game.page?.content?.gamepackage?.mtchpPrdctr?.teams.map(i => i.percentage) || []))*2).toFixed(0)}</>
                                     ) : null}
                                 </TableCell>
                                 <TableCell>

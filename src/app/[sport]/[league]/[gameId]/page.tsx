@@ -1,3 +1,4 @@
+import { Debug } from "@/components/ui/debug";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { analyzeGame } from "@/services/analysis";
 import { getGame, getGameUrl } from "@/services/espn";
@@ -13,7 +14,11 @@ const GamePage = async ({ params }: {params: Promise<{ league: string, gameId: s
             <Link href={getGameUrl(league, gameId)} className="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">
                 ESPN game link
             </Link>
-            <pre>{JSON.stringify(analysis || 'no analysis available - check the game page', null, 2)}</pre>
+            <pre>
+                {JSON.stringify(game?.page?.content?.gamepackage?.mtchpPrdctr?.teams.map(({ percentage, team}) => ({ percentage, team})))}
+            </pre>
+            <Debug data={analysis || 'no analysis available - check the game page'} />
+            <Debug data={game || 'no game available - check the game page'} />
             <Table>
                 <TableBody>
                     {plays?.map((play) => {

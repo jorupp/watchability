@@ -12,7 +12,7 @@ export const CalendarComponent = async ({ sport, league, scoreboard, header, sho
     const events = scoreboard.events.sort((a, b) => a.date.localeCompare(b.date));
     const augmentedEvents = await Promise.all(events.map(async (event) => {
         const game = await getGame(league, event.id);
-        const analysis = analyzeGame(game);
+        const analysis = analyzeGame(game, event.id);
         return {
             ...event,
             game,

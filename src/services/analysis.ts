@@ -23,33 +23,46 @@ function parseClock(clck: string) {
     return minutes * 60 + seconds;
 }
 
-export function analyzeGame(game: Game): AnalysisResult | null {
+export function analyzeGame(game: Game, eventId: string): AnalysisResult | null {
     if (game?.page?.content?.gamepackage?.allDrives) {
-        const basePlays = game.page.content.gamepackage.allDrives.map(i => i.lastPlay?.winProbability).filter(Boolean);
-        if (basePlays.length < 1) return null;
-        // gamePct will be simple - just number of plays
-        const plays = basePlays.map((i, ix) => ({ favoredTeam: i.favoredTeamAbbrev, wnPrb: parseFloat(i.favoredTeamWinPercentage), gamePct: ix / (basePlays.length - 1)}))
-        const winner = plays[plays.length - 1].favoredTeam;
-        const lowerWinProb = plays.map(({ wnPrb, gamePct }) => ({wnPrb: 100-(wnPrb || 100), gamePct }));
-        const simpleLoserWP = plays.map(({favoredTeam, wnPrb, gamePct}) => ({wnPrb: favoredTeam !== winner ? wnPrb || 0 : 100-(wnPrb || 0), gamePct }));
-        // football has fewer plays, so bigger wnPct changes are expected
-        return analyzeWinProb(lowerWinProb, simpleLoserWP, [2, 6]);
-    } else if(game?.page?.content?.gamepackage?.plys) {
-        const plays = game.page.content.gamepackage.plys.filter(i => i.wnPrb !== undefined && i.wnPrb !== null && i.clck !== undefined && i.prd !== undefined); // only consider plays with win probability and clock defined
-        if (plays.length < 1) return null;
-        const winner = plays[plays.length - 1].team;
-        const totalP = max(plays.map(i => i.prd)) || 0;
-        const maxClockPerP = Object.fromEntries(Object.entries(groupBy(plays, 'prd')).map(([prd, plays]) => ([prd, max(plays.map(i => parseClock(i.clck))) || 0])));
-        // given a period and clock, calculate the percentage of the game that has been played, assuming all periods are equal-length (this gives extra bias to overtimes, but overtimes are good, so that's good)
-        function getGamePct(prd: number, clck: string) {
-            const maxClock = maxClockPerP[prd];
-            const clckSec = parseClock(clck);
-            return ((maxClock - clckSec) / maxClock)/totalP + (prd-1)/totalP;
+        const basePlays = game.page.content.gamepackage.allDrives.map(i => i.lx?.wp).filter(Boolean);
+        if (basePlays.length >= 1) {
+            // gamePct will be simple - just number of plays
+            const plays = basePlays.map((i, ix) => ({ favoredTeam: i.favoredTeamAbbrev, wnPrb: parseFloat(i.favoredTeamWinPercentage), gamePct: ix / (basePlays.length - 1)}))
+            const winner = plays[plays.length - 1].favoredTeam;
+            const lowerWinProb = plays.map(({ wnPrb, gamePct }) => ({wnPrb: 100-(wnPrb || 100), gamePct }));
+            const simpleLoserWP = plays.map(({favoredTeam, wnPrb, gamePct}) => ({wnPrb: favoredTeam !== winner ? wnPrb || 0 : 100-(wnPrb || 0), gamePct }));
+            // football has fewer plays, so bigger wnPct changes are expected
+            return analyzeWinProb(lowerWinProb, simpleLoserWP, [2, 6]);
         }
-        const lowerWinProb = plays.map(({ wnPrb, prd, clck}) => ({wnPrb: 100-(wnPrb || 100), gamePct: getGamePct(prd, clck) }));
-        const simpleLoserWP = plays.map(({team, wnPrb, prd, clck}) => ({wnPrb: team !== winner ? wnPrb || 0 : 100-(wnPrb || 0), gamePct: getGamePct(prd, clck) }));
-        // basketball has a lot of plays, so wnPct doesn't change much per play
-        return analyzeWinProb(lowerWinProb, simpleLoserWP, [0.5, 2.5]);
+    }
+    if(game?.page?.content?.gamepackage?.plys) {
+        const plays = game.page.content.gamepackage.plys.filter(i => i.wnPrb !== undefined && i.wnPrb !== null && i.clck !== undefined && i.prd !== undefined); // only consider plays with win probability and clock defined
+        if (plays.length >= 1)
+        {
+            const winner = plays[plays.length - 1].team;
+            const totalP = max(plays.map(i => i.prd)) || 0;
+            const maxClockPerP = Object.fromEntries(Object.entries(groupBy(plays, 'prd')).map(([prd, plays]) => ([prd, max(plays.map(i => parseClock(i.clck))) || 0])));
+            // given a period and clock, calculate the percentage of the game that has been played, assuming all periods are equal-length (this gives extra bias to overtimes, but overtimes are good, so that's good)
+            function getGamePct(prd: number, clck: string) {
+                const maxClock = maxClockPerP[prd];
+                const clckSec = parseClock(clck);
+                return ((maxClock - clckSec) / maxClock)/totalP + (prd-1)/totalP;
+            }
+            const lowerWinProb = plays.map(({ wnPrb, prd, clck}) => ({wnPrb: 100-(wnPrb || 100), gamePct: getGamePct(prd, clck) }));
+            const simpleLoserWP = plays.map(({team, wnPrb, prd, clck}) => ({wnPrb: team !== winner ? wnPrb || 0 : 100-(wnPrb || 0), gamePct: getGamePct(prd, clck) }));
+            // basketball has a lot of plays, so wnPct doesn't change much per play
+            return analyzeWinProb(lowerWinProb, simpleLoserWP, [0.5, 2.5]);
+        }
+    }
+    if(false) {
+        console.log('No data to use to find win probability for event', {
+            eventId,
+            drives: game?.page?.content?.gamepackage?.allDrives?.length,
+            plays: game?.page?.content?.gamepackage?.plys?.length,
+            drive0: game?.page?.content?.gamepackage?.allDrives?.[0],
+            drive0lx: game?.page?.content?.gamepackage?.allDrives?.[0]?.lx,
+        });
     }
     return null;
 }

@@ -207,19 +207,19 @@ export interface MtchpPrdctrTeam {
   tmName: string;
 }
 export interface Drive {
-  index: number;
-  identifier: string;
-  driveDetails: unknown;
-  lastPlay: LastPlay;
-  playerDetails: unknown;
-  participants: unknown[];
+  ix: number;
+  if: string;
+  dv: unknown;
+  lx: LastPlay;
+  pl: unknown;
+  pc: unknown[];
   isLastPlay: boolean;
 }
 export interface LastPlay {
   id: string;
-  winProbability: WinProbability;
-  playTitle: string;
-  timeLabel: string; // something like "14:46 - 1st"
+  wp: WinProbability;
+  pt: string;
+  tm: string; // something like "14:46 - 1st"
 }
 export interface WinProbability {
   isTie: false;

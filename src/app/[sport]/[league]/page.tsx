@@ -16,7 +16,7 @@ const CalendarPage = async ({ params }: {params: Promise<{ sport: string, league
                     </li> : <Fragment key={ix}>
                         {date.entries.map(entry => (
                             <li key={entry.value}>
-                                <Link href={`/${sport}/${league}/week/${entry.value}`} className="text-blue-500 hover:underline">{date.label}: {entry.label}</Link>
+                                <Link href={`/${sport}/${league}/week/${entry.value}`} className="text-blue-500 hover:underline">{date.label}: {entry.label} ({new Date(entry.startDate).toLocaleDateString()} - {new Date(entry.endDate).toLocaleDateString()})</Link>
                             </li>
                         ))}
                     </Fragment>

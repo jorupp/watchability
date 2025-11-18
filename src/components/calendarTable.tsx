@@ -9,6 +9,8 @@ import { useState, useEffect } from "react";
 import { FavoriteButton } from "@/components/favoriteButton";
 import { getFavoriteKey, getFavorites } from "@/lib/favorites";
 
+import { AnalysisResult } from "@/services/analysis";
+
 interface Competitor {
   homeAway: string;
   curatedRank: {
@@ -24,30 +26,15 @@ interface Competition {
   broadcast?: string;
 }
 
-interface Analysis {
-  score: number;
-  winProbHistogram: number[];
-}
-
-interface Game {
-  page?: {
-    content?: {
-      gamepackage?: {
-        mtchpPrdctr?: {
-          teams: Array<{ percentage: number }>;
-        };
-      };
-    };
-  };
-}
-
 interface AugmentedEvent {
   id: string;
   date: string;
   shortName: string;
   competitions: Competition[];
-  analysis?: Analysis | null;
-  game?: Game;
+  gamePredictor?: Array<{ percentage: number }>;
+  analysisScore?: number;
+  analysisHistogram?: number[];
+  analysisRaw?: AnalysisResult | null;
 }
 
 export function CalendarTable({ sport, league, augmentedEvents, showDate }: { 
@@ -137,22 +124,22 @@ export function CalendarTable({ sport, league, augmentedEvents, showDate }: {
                                 <TableCell>{t1.homeAway}: {t1.curatedRank.current < 99 ? <b>{t1.curatedRank.current}</b> : null} {t1.team.displayName}</TableCell>
                                 <TableCell>{t2.homeAway}: {t2.curatedRank.current < 99 ? <b>{t2.curatedRank.current}</b> : null} {t2.team.displayName}</TableCell>
                                 <TableCell className="text-right">
-                                    {event.analysis ? (
+                                    {event.analysisScore ? (
                                         <Tooltip>
                                             <TooltipTrigger>
                                                 {/* cap at 100 to avoid giving away whether there are multiple factors at play and, how extreme any comeback is, or how late it will be */}
-                                                {Math.min(100, event.analysis.score).toFixed(2)}
+                                                {Math.min(100, event.analysisScore).toFixed(2)}
                                             </TooltipTrigger>
                                             <TooltipContent>
-                                                <pre>{JSON.stringify(event.analysis, null, 2)}</pre>
+                                                <pre>{JSON.stringify(event.analysisRaw, null, 2)}</pre>
                                             </TooltipContent>
                                         </Tooltip>
-                                    ) : event.game ? (
-                                        <>PG: {(Math.min(...(event.game.page?.content?.gamepackage?.mtchpPrdctr?.teams.map((i: { percentage: number }) => i.percentage) || []))*2).toFixed(0)}</>
+                                    ) : event.gamePredictor ? (
+                                        <>PG: {(Math.min(...(event.gamePredictor.map((i: { percentage: number }) => i.percentage) || []))*2).toFixed(0)}</>
                                     ) : null}
                                 </TableCell>
                                 <TableCell>
-                                    {event.analysis ? (
+                                    {event.analysisScore && event.analysisHistogram ? (
                                     <Tooltip>
                                         <TooltipTrigger>
                                             <ChartColumn className="h-4 mt-1" />
@@ -163,7 +150,7 @@ export function CalendarTable({ sport, league, augmentedEvents, showDate }: {
                                                 <p>50%</p>
                                                 <p>0%</p>
                                             </div>
-                                            <Chart winProbHistogram={event.analysis.winProbHistogram} />
+                                            <Chart winProbHistogram={event.analysisHistogram} />
                                         </TooltipContent>
                                     </Tooltip>
                                 ) : null}

@@ -1,12 +1,8 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { analyzeGame } from "@/services/analysis";
-import { getGame, getScoreboard } from "@/services/espn";
-import Link from "next/link";
-import { Chart } from "./chart";
-import { ChartColumn } from "lucide-react";
+import { getGame } from "@/services/espn";
 import { RootObject as Scoreboard } from "@/types/scoreboard";
 import { ReactNode } from "react";
+import { CalendarTable } from "@/components/calendarTable";
 
 export const CalendarComponent = async ({ sport, league, scoreboard, header, showDate }: { sport: string, league: string, scoreboard: Scoreboard, header: ReactNode, showDate?: boolean}) => {
     const events = scoreboard.events.sort((a, b) => a.date.localeCompare(b.date));
@@ -20,93 +16,14 @@ export const CalendarComponent = async ({ sport, league, scoreboard, header, sho
         };
     }));
     return (
-        <TooltipProvider>
         <div>
             {header}
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Start Time</TableHead>
-                        <TableHead>Network</TableHead>
-                        <TableHead>Event</TableHead>
-                        <TableHead>R</TableHead>
-                        <TableHead>Home</TableHead>
-                        <TableHead>Away</TableHead>
-                        <TableHead>Score</TableHead>
-                        {/* <TableHead>Analysis</TableHead> */}
-                        {/* {Object.keys(augmentedEvents[0].analysis).map((key) => (
-                            <TableHead key={key}>{key}</TableHead>
-                        ))} */}
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {augmentedEvents.map((event) => {
-                        const t1 = event.competitions[0].competitors[1];
-                        const t2 = event.competitions[0].competitors[0];
-                        const date = new Date(event.date);
-                        return (
-                            <TableRow key={event.id}>
-                                <TableCell>{showDate && date.toLocaleDateString()} {date.toLocaleTimeString()}</TableCell>
-                                <TableCell>{event.competitions[0]?.broadcast}</TableCell>
-                                <TableCell><Link href={`/${sport}/${league}/${event.id}`} className="text-blue-500 hover:underline">{event.shortName}</Link></TableCell>
-                                <TableCell>
-                                    {t1.curatedRank.current < 99 && t2.curatedRank.current < 99 ? (
-                                        <span className="font-bold">{t1.curatedRank.current + t2.curatedRank.current}</span>
-                                    ) : null}
-                                </TableCell>
-                                <TableCell>{t1.homeAway}: {t1.curatedRank.current < 99 ? <b>{t1.curatedRank.current}</b> : null} {t1.team.displayName}</TableCell>
-                                <TableCell>{t2.homeAway}: {t2.curatedRank.current < 99 ? <b>{t2.curatedRank.current}</b> : null} {t2.team.displayName}</TableCell>
-                                <TableCell className="text-right">
-                                    {event.analysis ? (
-                                        <Tooltip>
-                                            <TooltipTrigger>
-                                                {/* cap at 100 to avoid giving away whether there are multiple factors at play and, how extreme any comeback is, or how late it will be */}
-                                                {Math.min(100, event.analysis.score).toFixed(2)}
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <pre>{JSON.stringify(event.analysis, null, 2)}</pre>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    ) : event.game ? (
-                                        <>PG: {(Math.min(...(event.game.page?.content?.gamepackage?.mtchpPrdctr?.teams.map(i => i.percentage) || []))*2).toFixed(0)}</>
-                                    ) : null}
-                                </TableCell>
-                                <TableCell>
-                                    {event.analysis ? (
-                                    <Tooltip>
-                                        <TooltipTrigger>
-                                            <ChartColumn className="h-4 mt-1" />
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>Win Probability Histogram:</p>
-                                            <div className="flex align-items-center justify-between text-xs">
-                                                <p>50%</p>
-                                                <p>0%</p>
-                                            </div>
-                                            <Chart winProbHistogram={event.analysis.winProbHistogram} />
-                                        </TooltipContent>
-                                    </Tooltip>
-                                ) : null}
-                                </TableCell>
-                                {/* <TableCell>{event.analysis.avgChangePerPlay.toFixed(2)}</TableCell> */}
-                                {/* <TableCell>{event.analysis.maxLoserWPAfter90Pct.toFixed(0)}</TableCell> */}
-                                {/* <TableCell><pre>{JSON.stringify(event.analysis, null, 2)}</pre></TableCell> */}
-                                {/* {Object.entries(event.analysis).map(([key, value]) => (
-                                    <TableCell key={key}>{
-                                        typeof value === 'number'
-                                            ? (value as number).toFixed(key === 'avgChangePerPlay' ? 2 : 0)
-                                            : Array.isArray(value)
-                                                ? value.map(i => (i as number).toFixed(0)).join(', ')
-                                                : JSON.stringify(value, null, 2)
-                                    }</TableCell>
-                                ))} */}
-                            </TableRow>
-                        );
-                    })}
-                </TableBody>
-            </Table>
-            {/* <pre>{JSON.stringify(events, null, 2)}</pre> */}
+            <CalendarTable 
+                sport={sport} 
+                league={league} 
+                augmentedEvents={augmentedEvents} 
+                showDate={showDate}
+            />
         </div>
-        </TooltipProvider>
     );
 }

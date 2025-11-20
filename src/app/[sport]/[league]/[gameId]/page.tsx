@@ -8,7 +8,7 @@ const GamePage = async ({ params }: {params: Promise<{ league: string, gameId: s
     const { league, gameId } = await params;
     const game = await getGame(league, gameId);
     const plays = game.page.content.gamepackage.plys;
-    const analysis = analyzeGame(game);
+    const analysis = analyzeGame(game, gameId);
     return (
         <>
             <Link href={getGameUrl(league, gameId)} className="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">

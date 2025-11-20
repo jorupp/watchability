@@ -5,9 +5,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import Link from "next/link";
 import { Chart } from "../app/[sport]/[league]/chart";
 import { ChartColumn } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { FavoriteButton } from "@/components/favoriteButton";
-import { getFavoriteKey, getFavorites } from "@/lib/favorites";
+import { getFavoriteKey, getFavorites, toggleFavorite } from "@/lib/favorites";
 
 import { AnalysisResult } from "@/services/analysis";
 
@@ -37,50 +37,44 @@ interface AugmentedEvent {
   analysisRaw?: AnalysisResult | null;
 }
 
+interface SortedEvent extends AugmentedEvent {
+  isFavorite: boolean;
+}
+
 export function CalendarTable({ sport, league, augmentedEvents, showDate }: { 
   sport: string, 
   league: string, 
   augmentedEvents: AugmentedEvent[], 
   showDate?: boolean 
 }) {
-    const [sortedEvents, setSortedEvents] = useState(augmentedEvents);
+    const [favoriteState, setFavoriteState] = useState(0); // Used to trigger re-sorting
 
-    useEffect(() => {
-        // Sort events with favorites first
+    // Use useMemo to compute sorted events with favorite status
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const sortedEvents: SortedEvent[] = useMemo(() => {
         const favorites = getFavorites();
-        const sorted = [...augmentedEvents].sort((a, b) => {
-            const aKey = getFavoriteKey({ sport, league, eventId: a.id });
-            const bKey = getFavoriteKey({ sport, league, eventId: b.id });
-            const aFav = favorites.has(aKey);
-            const bFav = favorites.has(bKey);
-            
+        
+        // Map events to include favorite status
+        const eventsWithFavorites = augmentedEvents.map(event => ({
+            ...event,
+            isFavorite: favorites.has(getFavoriteKey({ sport, league, eventId: event.id }))
+        }));
+        
+        // Sort with favorites first
+        return eventsWithFavorites.sort((a, b) => {
             // Favorites first
-            if (aFav && !bFav) return -1;
-            if (!aFav && bFav) return 1;
+            if (a.isFavorite && !b.isFavorite) return -1;
+            if (!a.isFavorite && b.isFavorite) return 1;
             
             // Otherwise maintain original order (by date)
             return a.date.localeCompare(b.date);
         });
-        setSortedEvents(sorted);
-    }, [augmentedEvents, sport, league]);
+    }, [augmentedEvents, sport, league, favoriteState]);
 
-    const handleFavoriteToggle = () => {
-        // Re-sort when a favorite is toggled
-        const favorites = getFavorites();
-        const sorted = [...sortedEvents].sort((a, b) => {
-            const aKey = getFavoriteKey({ sport, league, eventId: a.id });
-            const bKey = getFavoriteKey({ sport, league, eventId: b.id });
-            const aFav = favorites.has(aKey);
-            const bFav = favorites.has(bKey);
-            
-            // Favorites first
-            if (aFav && !bFav) return -1;
-            if (!aFav && bFav) return 1;
-            
-            // Otherwise maintain original order (by date)
-            return a.date.localeCompare(b.date);
-        });
-        setSortedEvents(sorted);
+    const handleFavoriteToggle = (eventId: string) => {
+        toggleFavorite({ sport, league, eventId });
+        // Increment state to trigger re-sorting
+        setFavoriteState(prev => prev + 1);
     };
 
     return (
@@ -107,10 +101,8 @@ export function CalendarTable({ sport, league, augmentedEvents, showDate }: {
                             <TableRow key={event.id}>
                                 <TableCell>
                                     <FavoriteButton 
-                                        sport={sport} 
-                                        league={league} 
-                                        eventId={event.id}
-                                        onToggle={handleFavoriteToggle}
+                                        isFavorite={event.isFavorite}
+                                        onToggle={() => handleFavoriteToggle(event.id)}
                                     />
                                 </TableCell>
                                 <TableCell>{showDate && date.toLocaleDateString()} {date.toLocaleTimeString()}</TableCell>

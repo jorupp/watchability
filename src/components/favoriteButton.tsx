@@ -46,7 +46,7 @@ export function FavoriteButton({ sport, league, eventId, onToggle }: FavoriteBut
   return (
     <button
       onClick={handleToggle}
-      className="p-1 hover:bg-gray-100 rounded transition-colors"
+      className="p-1 hover:bg-gray-100 rounded transition-colors cursor-pointer"
       title={favorited ? "Remove from favorites" : "Add to favorites"}
     >
       <Star

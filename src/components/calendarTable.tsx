@@ -47,34 +47,25 @@ export function CalendarTable({ sport, league, augmentedEvents, showDate }: {
   augmentedEvents: AugmentedEvent[], 
   showDate?: boolean 
 }) {
-    const [favoriteState, setFavoriteState] = useState(0); // Used to trigger re-sorting
+    const [favoritesSet, setFavoritesSet] = useState(() => getFavorites());
 
-    // Use useMemo to compute sorted events with favorite status
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     const sortedEvents: SortedEvent[] = useMemo(() => {
-        const favorites = getFavorites();
-        
-        // Map events to include favorite status
         const eventsWithFavorites = augmentedEvents.map(event => ({
             ...event,
-            isFavorite: favorites.has(getFavoriteKey({ sport, league, eventId: event.id }))
+            isFavorite: favoritesSet.has(getFavoriteKey({ sport, league, eventId: event.id }))
         }));
         
         // Sort with favorites first
         return eventsWithFavorites.sort((a, b) => {
-            // Favorites first
             if (a.isFavorite && !b.isFavorite) return -1;
             if (!a.isFavorite && b.isFavorite) return 1;
-            
-            // Otherwise maintain original order (by date)
             return a.date.localeCompare(b.date);
         });
-    }, [augmentedEvents, sport, league, favoriteState]);
+    }, [augmentedEvents, sport, league, favoritesSet]);
 
     const handleFavoriteToggle = (eventId: string) => {
         toggleFavorite({ sport, league, eventId });
-        // Increment state to trigger re-sorting
-        setFavoriteState(prev => prev + 1);
+        setFavoritesSet(getFavorites());
     };
 
     return (

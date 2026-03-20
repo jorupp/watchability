@@ -1,7 +1,7 @@
 'use client';
 
 import { Star } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface FavoriteButtonProps {
   isFavorite: boolean;
@@ -16,6 +16,12 @@ export function FavoriteButton({ isFavorite, onToggle }: FavoriteButtonProps) {
     setMounted(true);
   }, []);
 
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onToggle();
+  }, [onToggle]);
+
   if (!mounted) {
     return (
       <button className="p-1 opacity-0" disabled>
@@ -23,12 +29,6 @@ export function FavoriteButton({ isFavorite, onToggle }: FavoriteButtonProps) {
       </button>
     );
   }
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onToggle();
-  };
 
   return (
     <button

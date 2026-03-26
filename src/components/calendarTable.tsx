@@ -60,9 +60,9 @@ function ScoreDisplay({ event }: { event: AugmentedEvent }) {
     const capped = Math.min(SCORE_MAX, event.analysisScore);
     // Color-code by score: green > high threshold, yellow > medium threshold, muted otherwise
     const colorClass = capped >= SCORE_HIGH_THRESHOLD
-      ? 'text-green-400 font-semibold'
+      ? 'text-green-700 dark:text-green-400 font-semibold'
       : capped >= SCORE_MEDIUM_THRESHOLD
-        ? 'text-yellow-400'
+        ? 'text-amber-700 dark:text-yellow-400'
         : 'text-muted-foreground';
     return (
       <Tooltip>
@@ -152,17 +152,17 @@ export function CalendarTable({ sport, league, augmentedEvents, showDate }: {
                                     </TableCell>
                                     <TableCell className="py-1.5 text-center">
                                         {t1.curatedRank.current < 99 && t2.curatedRank.current < 99 ? (
-                                            <span className="text-xs font-bold text-yellow-400">{t1.curatedRank.current + t2.curatedRank.current}</span>
+                                            <span className="text-xs font-bold text-amber-700 dark:text-yellow-400">{t1.curatedRank.current + t2.curatedRank.current}</span>
                                         ) : null}
                                     </TableCell>
                                     <TableCell className="py-1.5 text-xs">
                                         <span className="text-muted-foreground">{t1.homeAway}: </span>
-                                        {t1.curatedRank.current < 99 ? <span className="font-bold text-yellow-400 mr-1">#{t1.curatedRank.current}</span> : null}
+                                        {t1.curatedRank.current < 99 ? <span className="font-bold text-amber-700 dark:text-yellow-400 mr-1">#{t1.curatedRank.current}</span> : null}
                                         <span>{t1.team.displayName}</span>
                                     </TableCell>
                                     <TableCell className="py-1.5 text-xs">
                                         <span className="text-muted-foreground">{t2.homeAway}: </span>
-                                        {t2.curatedRank.current < 99 ? <span className="font-bold text-yellow-400 mr-1">#{t2.curatedRank.current}</span> : null}
+                                        {t2.curatedRank.current < 99 ? <span className="font-bold text-amber-700 dark:text-yellow-400 mr-1">#{t2.curatedRank.current}</span> : null}
                                         <span>{t2.team.displayName}</span>
                                     </TableCell>
                                     <TableCell className="py-1.5 text-right">

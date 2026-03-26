@@ -174,8 +174,8 @@ export function CalendarTable({ sport, league, augmentedEvents, showDate }: {
                                             <TooltipTrigger>
                                                 <ChartColumn className="h-4 mt-0.5 text-muted-foreground hover:text-primary transition-colors" />
                                             </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p className="text-xs mb-1">Win Probability Histogram:</p>
+                                            <TooltipContent className="bg-popover text-popover-foreground border border-border">
+                                                <p className="text-xs mb-1 font-medium">Win Probability Histogram:</p>
                                                 <div className="flex justify-between text-xs text-muted-foreground mb-1">
                                                     <p>50%</p>
                                                     <p>0%</p>

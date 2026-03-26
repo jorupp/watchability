@@ -12,7 +12,7 @@ export const Chart = ({ winProbHistogram }: { winProbHistogram: number[] }) => {
 
     return (
         <BarChart {...dimensions} data={winProbHistogram.map((i, ix) => ({ ix, wnPrb: i}))}>
-            <Bar dataKey="wnPrb" fill="#8884d8" />
+            <Bar dataKey="wnPrb" fill="#22d3ee" />
         </BarChart>
     );
 }

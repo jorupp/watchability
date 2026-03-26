@@ -108,6 +108,7 @@ function analyzeWinProb(lowerWinProb: WinProbabilitySegment[], simpleLoserWP: Wi
         // scale avgChangePerPlay between changePerPlayRange (clamped) to 0-100
         Math.max(0, Math.min(avgChangePerPlay, changePerPlayRange[1]) - changePerPlayRange[0])/2*100,
         maxLoserWPAfter90Pct,
+        Math.min(100, maxLoserWPAfter975Pct * 1.5), // being competitive in the last 2.5% of the game is a strong signal, so we'll weight that more heavily - the losing team can max this out by getting to 66.7% WP at the end of the game
         // pct of time in top two buckets of win probabilities, 2x 45-50 + 1x 40-45
         Math.min(100, (winProbHistogram[0] * 2 + winProbHistogram[1])*100)
     ];

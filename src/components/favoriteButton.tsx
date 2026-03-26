@@ -33,12 +33,12 @@ export function FavoriteButton({ isFavorite, onToggle }: FavoriteButtonProps) {
   return (
     <button
       onClick={handleClick}
-      className="p-1 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+      className="p-1 hover:bg-muted/60 rounded transition-colors cursor-pointer"
       title={isFavorite ? "Remove from favorites" : "Add to favorites"}
     >
       <Star
         className={`h-4 w-4 transition-colors ${
-          isFavorite ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'
+          isFavorite ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground hover:text-yellow-400'
         }`}
       />
     </button>

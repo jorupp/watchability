@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { BarChart, Bar, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar } from 'recharts';
 
 const dimensions = { width: 150, height: 40};
 export const Chart = ({ winProbHistogram }: { winProbHistogram: number[] }) => {

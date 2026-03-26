@@ -41,11 +41,29 @@ interface SortedEvent extends AugmentedEvent {
   isFavorite: boolean;
 }
 
+// Score thresholds for color-coding watchability scores
+const SCORE_HIGH_THRESHOLD = 70;
+const SCORE_MEDIUM_THRESHOLD = 40;
+const SCORE_MAX = 100;
+
+/**
+ * Computes the "Game Predictor" score from team win percentages.
+ * ESPN's game predictor gives each team a win probability; a close game (both near 50%)
+ * yields a higher score. We take the minimum percentage × 2 so a perfectly even game → 100.
+ */
+function computeGamePredictorScore(predictor: Array<{ percentage: number }>): number {
+  return Math.min(...predictor.map((i) => i.percentage)) * 2;
+}
+
 function ScoreDisplay({ event }: { event: AugmentedEvent }) {
   if (event.analysisScore) {
-    const capped = Math.min(100, event.analysisScore);
-    // Color-code by score: green >70, yellow 40-70, muted <40
-    const colorClass = capped >= 70 ? 'text-green-400 font-semibold' : capped >= 40 ? 'text-yellow-400' : 'text-muted-foreground';
+    const capped = Math.min(SCORE_MAX, event.analysisScore);
+    // Color-code by score: green > high threshold, yellow > medium threshold, muted otherwise
+    const colorClass = capped >= SCORE_HIGH_THRESHOLD
+      ? 'text-green-400 font-semibold'
+      : capped >= SCORE_MEDIUM_THRESHOLD
+        ? 'text-yellow-400'
+        : 'text-muted-foreground';
     return (
       <Tooltip>
         <TooltipTrigger>
@@ -58,7 +76,7 @@ function ScoreDisplay({ event }: { event: AugmentedEvent }) {
     );
   }
   if (event.gamePredictor) {
-    const pg = (Math.min(...(event.gamePredictor.map((i: { percentage: number }) => i.percentage) || [])) * 2).toFixed(0);
+    const pg = computeGamePredictorScore(event.gamePredictor).toFixed(0);
     return <span className="text-muted-foreground text-xs">PG:{pg}</span>;
   }
   return null;

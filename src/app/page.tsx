@@ -29,7 +29,7 @@ const RootPage = async () => {
                     <Link key={sport} href={`/${sport}`}>
                         <Card className="hover:border-primary/60 hover:bg-muted/40 transition-all cursor-pointer group h-full">
                             <CardContent className="flex flex-col items-center justify-center p-4 gap-2">
-                                <span className="text-3xl" role="img">
+                                <span className="text-3xl" role="img" aria-label={sport}>
                                     {sportIcons[sport.toLowerCase()] ?? <Trophy className="h-8 w-8 text-primary" />}
                                 </span>
                                 <span className="text-sm font-medium capitalize text-center group-hover:text-primary transition-colors">{sport}</span>

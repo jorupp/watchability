@@ -20,3 +20,27 @@ export function getMythTvProgramUrl(
   const unixStartTime = Math.floor(startTime / 1000);
   return `${baseUrl.replace(/\/+$/, "")}/tv/detail/${channelId}/${unixStartTime}`;
 }
+
+/**
+ * Build a MythWeb title search for a matchup when the installation is known.
+ */
+export function getMythTvSearchUrl(
+  baseUrl: string | undefined,
+  teamNames: Array<string | undefined>,
+): string | undefined {
+  if (!baseUrl) return undefined;
+
+  const searchTerms = teamNames
+    .map((teamName) => teamName?.trim())
+    .filter((teamName): teamName is string => Boolean(teamName));
+
+  if (searchTerms.length !== 2) return undefined;
+
+  const query = new URLSearchParams({
+    type: "q",
+    s: searchTerms.join(" "),
+    search: "Search",
+  });
+
+  return `${baseUrl.replace(/\/+$/, "")}/tv/search?${query.toString()}`;
+}

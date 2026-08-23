@@ -36,6 +36,7 @@ interface AugmentedEvent {
   analysisHistogram?: number[];
   analysisRaw?: AnalysisResult | null;
   mythTvUrl?: string;
+  mythTvSearchUrl?: string;
 }
 
 interface SortedEvent extends AugmentedEvent {
@@ -151,6 +152,18 @@ export function CalendarTable({ sport, league, augmentedEvents, showDate }: {
                                                 {event.competitions[0]?.broadcast}
                                             </a>
                                         ) : event.competitions[0]?.broadcast}
+                                        {event.mythTvSearchUrl ? (
+                                            <>
+                                                {' '}
+                                                <a
+                                                    href={event.mythTvSearchUrl}
+                                                    className="text-primary hover:underline"
+                                                    aria-label="Search MythTV for this matchup"
+                                                >
+                                                    (S)
+                                                </a>
+                                            </>
+                                        ) : null}
                                     </TableCell>
                                     <TableCell className="py-1.5">
                                         <Link href={`/${sport}/${league}/${event.id}`} className="text-primary hover:underline font-medium text-sm">

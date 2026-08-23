@@ -3,7 +3,7 @@ import { getGame } from "@/services/espn";
 import { RootObject as Scoreboard } from "@/types/scoreboard";
 import { ReactNode } from "react";
 import { CalendarTable } from "@/components/calendarTable";
-import { getMythTvProgramUrl } from "@/lib/mythtv";
+import { getMythTvProgramUrl, getMythTvSearchUrl } from "@/lib/mythtv";
 
 export const CalendarComponent = async ({ sport, league, scoreboard, header, showDate }: { sport: string, league: string, scoreboard: Scoreboard, header: ReactNode, showDate?: boolean}) => {
     const events = scoreboard.events.sort((a, b) => a.date.localeCompare(b.date));
@@ -18,6 +18,13 @@ export const CalendarComponent = async ({ sport, league, scoreboard, header, sho
                 process.env.MYTHTV_BASE_URL,
                 event.competitions[0]?.broadcast,
                 event.date,
+            ),
+            mythTvSearchUrl: getMythTvSearchUrl(
+                process.env.MYTHTV_BASE_URL,
+                [
+                    event.competitions[0]?.competitors[1]?.team.displayName,
+                    event.competitions[0]?.competitors[0]?.team.displayName,
+                ],
             ),
             // Only send the specific game data needed for display
             gamePredictor: game?.page?.content?.gamepackage?.mtchpPrdctr?.teams?.map((i: { percentage: number }) => ({ percentage: i.percentage })),

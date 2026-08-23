@@ -46,6 +46,14 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+### MythTV program links
+
+To link calendar networks to their matching MythWeb programs, copy `.env.example` to
+`.env.local` and set `MYTHTV_BASE_URL` to the root of your MythWeb installation. Network
+names are mapped to MythTV channel IDs in `src/config/mythtv-channels.json`; add the
+channels available on your MythTV instance there. If either setting is missing, the
+network remains plain text.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

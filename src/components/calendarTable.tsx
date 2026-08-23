@@ -35,6 +35,7 @@ interface AugmentedEvent {
   analysisScore?: number;
   analysisHistogram?: number[];
   analysisRaw?: AnalysisResult | null;
+  mythTvUrl?: string;
 }
 
 interface SortedEvent extends AugmentedEvent {
@@ -144,7 +145,13 @@ export function CalendarTable({ sport, league, augmentedEvents, showDate }: {
                                         {showDate && <span className="font-medium text-foreground">{date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} </span>}
                                         {date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
                                     </TableCell>
-                                    <TableCell className="py-1.5 text-xs text-muted-foreground">{event.competitions[0]?.broadcast}</TableCell>
+                                    <TableCell className="py-1.5 text-xs text-muted-foreground">
+                                        {event.mythTvUrl ? (
+                                            <a href={event.mythTvUrl} className="text-primary hover:underline">
+                                                {event.competitions[0]?.broadcast}
+                                            </a>
+                                        ) : event.competitions[0]?.broadcast}
+                                    </TableCell>
                                     <TableCell className="py-1.5">
                                         <Link href={`/${sport}/${league}/${event.id}`} className="text-primary hover:underline font-medium text-sm">
                                             {event.shortName}

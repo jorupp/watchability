@@ -31,7 +31,7 @@ export function getMythTvSearchUrl(
   if (!baseUrl) return undefined;
 
   const searchTerms = teamNames
-    .map((teamName) => teamName?.trim())
+    .map((teamName) => teamName?.trim().split(/\s+/, 1)[0])
     .filter((teamName): teamName is string => Boolean(teamName));
 
   if (searchTerms.length !== 2) return undefined;

@@ -53,7 +53,7 @@ To link calendar networks to their matching MythWeb programs, copy `.env.example
 names are mapped to MythTV channel IDs in `src/config/mythtv-channels.json`; add the
 channels available on your MythTV instance there. If either setting is missing, the
 network remains plain text. When the base URL is configured, `(S)` beside each network
-links to a MythWeb search for the two teams in that matchup.
+links to a MythWeb search using the first word of each team's name.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

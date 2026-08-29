@@ -35,7 +35,7 @@ interface AugmentedEvent {
   analysisScore?: number;
   analysisHistogram?: number[];
   analysisRaw?: AnalysisResult | null;
-  mythTvUrl?: string;
+  networks?: Array<{ name: string; url?: string }>;
   mythTvSearchUrl?: string;
 }
 
@@ -147,11 +147,18 @@ export function CalendarTable({ sport, league, augmentedEvents, showDate }: {
                                         {date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
                                     </TableCell>
                                     <TableCell className="py-1.5 text-xs text-muted-foreground">
-                                        {event.mythTvUrl ? (
-                                            <a href={event.mythTvUrl} className="text-primary hover:underline">
-                                                {event.competitions[0]?.broadcast}
-                                            </a>
-                                        ) : event.competitions[0]?.broadcast}
+                                        {event.networks && event.networks.length > 0
+                                            ? event.networks.map((network, i) => (
+                                                <span key={network.name}>
+                                                    {i > 0 ? ' / ' : ''}
+                                                    {network.url ? (
+                                                        <a href={network.url} className="text-primary hover:underline">
+                                                            {network.name}
+                                                        </a>
+                                                    ) : network.name}
+                                                </span>
+                                            ))
+                                            : event.competitions[0]?.broadcast}
                                         {event.mythTvSearchUrl ? (
                                             <>
                                                 {' '}

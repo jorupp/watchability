@@ -3,7 +3,7 @@ import { getGame } from "@/services/espn";
 import { RootObject as Scoreboard } from "@/types/scoreboard";
 import { ReactNode } from "react";
 import { CalendarTable } from "@/components/calendarTable";
-import { getMythTvProgramUrl, getMythTvSearchUrl } from "@/lib/mythtv";
+import { getMythTvNetworkLinks, getMythTvSearchUrl } from "@/lib/mythtv";
 
 export const CalendarComponent = async ({ sport, league, scoreboard, header, showDate }: { sport: string, league: string, scoreboard: Scoreboard, header: ReactNode, showDate?: boolean}) => {
     const events = scoreboard.events.sort((a, b) => a.date.localeCompare(b.date));
@@ -14,7 +14,7 @@ export const CalendarComponent = async ({ sport, league, scoreboard, header, sho
         // Extract only the minimal data needed for rendering to reduce client-side data transfer
         return {
             ...event,
-            mythTvUrl: getMythTvProgramUrl(
+            networks: getMythTvNetworkLinks(
                 process.env.MYTHTV_BASE_URL,
                 event.competitions[0]?.broadcast,
                 event.date,

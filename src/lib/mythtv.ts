@@ -1,6 +1,8 @@
 import mythTvChannels from "@/config/mythtv-channels.json";
 
-const channelIds: Record<string, number> = mythTvChannels;
+const channelIds: Record<string, number> = Object.fromEntries(
+  Object.entries(mythTvChannels).map(([key, value]) => [key.toLowerCase(), value])
+);
 
 /**
  * Build a MythWeb program-detail URL when the installation and channel are known.
@@ -12,7 +14,7 @@ export function getMythTvProgramUrl(
 ): string | undefined {
   if (!baseUrl || !network) return undefined;
 
-  const channelId = channelIds[network];
+  const channelId = channelIds[network?.toLowerCase()];
   const startTime = new Date(date).getTime();
 
   if (channelId === undefined || !Number.isFinite(startTime)) return undefined;

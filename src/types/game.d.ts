@@ -220,6 +220,8 @@ export interface LastPlay {
   wp: WinProbability;
   pt: string;
   tm: string; // something like "14:46 - 1st"
+  sa?: boolean; // startTeamIsAway (false is omitted by ESPN)
+  ld?: string; // down and distance before a scrimmage play
 }
 export interface WinProbability {
   isTie: false;

@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test:analysis": "tsc src/services/analysis.ts --outDir .next/analysis-tests --module commonjs --target es2017 --esModuleInterop --skipLibCheck && node tests/analysis.test.mjs",
     "build-types": "node build-types.mjs"
   },
   "dependencies": {

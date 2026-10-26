@@ -1,5 +1,5 @@
-import { RootObject as Game } from "@/types/game";
-import { groupBy, last, max, min, range, takeWhile, zip } from 'lodash';
+import type { RootObject as Game } from "../types/game";
+import { groupBy, last, max, range, takeWhile, zip } from 'lodash';
 
 export interface AnalysisResult {
     avgLoserWP: number;
@@ -23,6 +23,98 @@ function parseClock(clck: string) {
     return minutes * 60 + seconds;
 }
 
+function latePossessionScore(game: Game): number {
+    const pkg = game?.page?.content?.gamepackage;
+    const sport = pkg?.gmStrp?.nm;
+    if (sport !== 'football' && sport !== 'basketball') return 0;
+
+    const teams = pkg.gmStrp.tms;
+    const home = teams?.find(team => team.isHome);
+    const away = teams?.find(team => !team.isHome);
+    if (!home || !away) return 0;
+    // Use the final score, not the team attached to the last play or WP entry.
+    const homeScore = Number(home.score);
+    const awayScore = Number(away.score);
+    if (!Number.isFinite(homeScore) || !Number.isFinite(awayScore) || homeScore === awayScore) return 0;
+    const loser = homeScore < awayScore ? home : away;
+    const otherTeam = (team: string) => team === home.id ? away.id : home.id;
+    const periods = pkg.fmt?.prds;
+    const periodSeconds = pkg.fmt?.prdScnds;
+    const duration = periods * periodSeconds;
+    if (!(duration > 0)) return 0;
+    const maxPoints = sport === 'football' ? 8 : 4;
+    const easyLeadPoints = sport === 'football' ? 6 : 2;
+    const footballPlays = new Map(pkg.allDrives?.map(drive => [drive.lx?.id, drive.lx]));
+    let possession: string | undefined;
+    let previous: { hmScr: number; awyScr: number } = { hmScr: 0, awyScr: 0 };
+    let previousPeriod: number | undefined;
+    let latest: { remaining: number; deficit: number } | undefined;
+
+    function consider(team: string | undefined, scores: typeof previous, remaining: number) {
+        const deficit = loser.isHome ? scores.awyScr - scores.hmScr : scores.hmScr - scores.awyScr;
+        const competitive = deficit <= 0 || (team === loser.id && deficit <= maxPoints);
+        if (competitive && (!latest || remaining <= latest.remaining)) {
+            latest = { remaining, deficit };
+        }
+    }
+
+    // Keep plays without WP: possession can make a game competitive even when WP says otherwise.
+    for (const play of pkg.plys ?? []) {
+        if (!Number.isFinite(play.prd) || typeof play.clck !== 'string' ||
+            !Number.isFinite(play.hmScr) || !Number.isFinite(play.awyScr)) continue;
+        const clock = parseClock(play.clck);
+        if (!Number.isFinite(clock) || clock < 0 || clock > (play.prd > periods ? (pkg.fmt.otScnds ?? periodSeconds) : periodSeconds)) continue;
+        const remaining = play.prd > periods ? 0 : (periods - play.prd) * periodSeconds + clock;
+        if (play.prd !== previousPeriod) possession = undefined;
+        previousPeriod = play.prd;
+        const actor = teams.some(team => team.id === play.tm) ? play.tm : undefined;
+        const text = play.txt ?? '';
+        const endOfPeriod = /^End of /i.test(text);
+        let before = possession;
+        let after = possession;
+
+        if (sport === 'football') {
+            const details = footballPlays.get(play.id);
+            // The play's team can be the defense on a turnover. The start-team flag
+            // identifies who actually had the scoring opportunity before that play.
+            before = details?.ld ? (details.sa ? away.id : home.id) : actor;
+            after = actor;
+            if (/kickoff/i.test(text)) before = undefined;
+            if (play.scrng) after = undefined;
+            if (/extra point|two.point (pass|rush|conversion)/i.test(text) && !/touchdown/i.test(text)) {
+                before = undefined;
+                after = undefined;
+            }
+        } else if (actor) {
+            if (/\b(made|missed|turnover)\b/i.test(text)) {
+                before = actor;
+                after = /turnover|\bmade\b/i.test(text) && !/free throw/i.test(text) ? otherTeam(actor) : undefined;
+            } else if (/rebound|\bsteal\b/i.test(text)) {
+                after = actor;
+            } else if (/\bblock\b/i.test(text)) {
+                before = otherTeam(actor);
+                after = undefined;
+            }
+            // Fouls, substitutions and timeouts belong to either team; their tm
+            // field alone is not evidence that the team possessed the ball.
+        }
+
+        if (!endOfPeriod) {
+            // Scores on ESPN plays are post-play. A basket that cuts a six-point
+            // deficit to three does not create another possession for the scorer.
+            consider(before, previous, remaining);
+            if (clock > 0) consider(after, play, remaining);
+        }
+        possession = endOfPeriod ? undefined : after;
+        previous = play;
+    }
+
+    if (!latest) return 0;
+    // Linear ramp from 4/30 remaining (0) to 1/30 (100), then apply the lead bonus.
+    const base = Math.max(0, Math.min(100, (4 - 30 * latest.remaining / duration) / 3 * 100));
+    return base * (latest.deficit <= easyLeadPoints ? 1.3 : 1);
+}
+
 export function analyzeGame(game: Game, eventId: string): AnalysisResult | null {
     if (game?.page?.content?.gamepackage?.allDrives) {
         const basePlays = game.page.content.gamepackage.allDrives.map(i => i.lx?.wp).filter(Boolean);
@@ -33,7 +125,7 @@ export function analyzeGame(game: Game, eventId: string): AnalysisResult | null 
             const lowerWinProb = plays.map(({ wnPrb, gamePct }) => ({wnPrb: 100-(wnPrb || 100), gamePct }));
             const simpleLoserWP = plays.map(({favoredTeam, wnPrb, gamePct}) => ({wnPrb: favoredTeam !== winner ? wnPrb || 0 : 100-(wnPrb || 0), gamePct }));
             // football has fewer plays, so bigger wnPct changes are expected
-            return analyzeWinProb(lowerWinProb, simpleLoserWP, [2, 6]);
+            return analyzeWinProb(lowerWinProb, simpleLoserWP, [2, 6], latePossessionScore(game));
         }
     }
     if(game?.page?.content?.gamepackage?.plys) {
@@ -52,7 +144,7 @@ export function analyzeGame(game: Game, eventId: string): AnalysisResult | null 
             const lowerWinProb = plays.map(({ wnPrb, prd, clck}) => ({wnPrb: 100-(wnPrb || 100), gamePct: getGamePct(prd, clck) }));
             const simpleLoserWP = plays.map(({team, wnPrb, prd, clck}) => ({wnPrb: team !== winner ? wnPrb || 0 : 100-(wnPrb || 0), gamePct: getGamePct(prd, clck) }));
             // basketball has a lot of plays, so wnPct doesn't change much per play
-            return analyzeWinProb(lowerWinProb, simpleLoserWP, [0.5, 2.5]);
+            return analyzeWinProb(lowerWinProb, simpleLoserWP, [0.5, 2.5], latePossessionScore(game));
         }
     }
     if(false) {
@@ -72,7 +164,7 @@ interface WinProbabilitySegment {
     gamePct: number; // percentage of the game that has been played (0-1)
 }
 
-function analyzeWinProb(lowerWinProb: WinProbabilitySegment[], simpleLoserWP: WinProbabilitySegment[], changePerPlayRange: [number, number]): AnalysisResult | null {
+function analyzeWinProb(lowerWinProb: WinProbabilitySegment[], simpleLoserWP: WinProbabilitySegment[], changePerPlayRange: [number, number], latePossession: number): AnalysisResult | null {
     const avgLoserWP = simpleLoserWP.reduce((acc, {wnPrb}) => acc + wnPrb, 0) / simpleLoserWP.length;
     const maxLoserWP = max(simpleLoserWP.map(i => i.wnPrb)) || 0;
     const totalChange = zip(simpleLoserWP.slice(0, -1), simpleLoserWP.slice(1)).reduce((acc, [a, b]) => acc + Math.abs((b?.wnPrb || 0) - (a?.wnPrb || 0)), 0);
@@ -101,7 +193,7 @@ function analyzeWinProb(lowerWinProb: WinProbabilitySegment[], simpleLoserWP: Wi
     //   - maxLoserWP over 80 (this catches blowouts by underdogs, like McNeese vs. Clemson)
     //   - high avgChangePerPlay (likely indicates a lot of late swings - will confim with Arkansas vs. Kansas)
     //   - high maxLoserWPAfter90Pct (is game competitive in the last 4:00 - will confirm with UC San Diego vs. Michigan)
-    // each part should be 0-100, and we'll take the max
+    // Most parts are 0-100; a late possession to take the lead can reach 130.
     const scoreParts = [
         // scale maxLoserWPs 60-90 (clamped) to 0-100
         Math.max(0, Math.min(maxLoserWP, 90) - 60)/30*100,
@@ -110,11 +202,12 @@ function analyzeWinProb(lowerWinProb: WinProbabilitySegment[], simpleLoserWP: Wi
         Math.min(100, maxLoserWPAfter90Pct * 1.5), // last 6:00 of football
         Math.min(100, maxLoserWPAfter975Pct * 2), // last 1:30 of football - weight that more heavily - the losing team can max this out by getting to 66.7% WP at the end of the game
         // pct of time in top two buckets of win probabilities, 2x 45-50 + 1x 40-45
-        Math.min(100, (winProbHistogram[0] * 2 + winProbHistogram[1])*100)
+        Math.min(100, (winProbHistogram[0] * 2 + winProbHistogram[1])*100),
+        latePossession,
     ];
     // don't want to strictly take the max, because we want to reward games that are good in multiple ways, but don't want to under-reward games good in only one way
     // so we'll take the max + 40% of the second max + 20% of the sum of the other parts
-    // this makes the maximum possible score 200 (100% for all components), but that's fine - we'll clamp to 100 later
+    // The raw score can exceed 100; display normalization is handled by the caller.
     const orderedScores = scoreParts.slice().sort((a, b) => b - a);
     const maxScore = orderedScores[0];
     const secondMaxScore = orderedScores[1];

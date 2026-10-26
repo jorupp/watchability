@@ -5,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import Link from "next/link";
 import { Chart } from "../app/[sport]/[league]/chart";
 import { ChartColumn } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { FavoriteButton } from "@/components/favoriteButton";
 import { getFavoriteKey, getFavorites, toggleFavorite } from "@/lib/favorites";
 
@@ -90,7 +90,17 @@ export function CalendarTable({ sport, league, augmentedEvents, showDate }: {
   augmentedEvents: AugmentedEvent[], 
   showDate?: boolean 
 }) {
-    const [favoritesSet, setFavoritesSet] = useState(() => getFavorites());
+    const [favoritesSet, setFavoritesSet] = useState(() => new Set<string>());
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setFavoritesSet(getFavorites());
+        setMounted(true);
+    }, []);
+
+    // Match the server during hydration, then display dates in the browser's locale/timezone.
+    const dateLocale = mounted ? undefined : 'en-US';
+    const dateTimeZone = mounted ? undefined : 'UTC';
 
     const sortedEvents: SortedEvent[] = useMemo(() => {
         const eventsWithFavorites = augmentedEvents.map(event => ({
@@ -143,8 +153,8 @@ export function CalendarTable({ sport, league, augmentedEvents, showDate }: {
                                         />
                                     </TableCell>
                                     <TableCell className="py-1.5 text-xs text-muted-foreground whitespace-nowrap">
-                                        {showDate && <span className="font-medium text-foreground">{date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} </span>}
-                                        {date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+                                        {showDate && <span className="font-medium text-foreground">{date.toLocaleDateString(dateLocale, { month: 'short', day: 'numeric', timeZone: dateTimeZone })} </span>}
+                                        {date.toLocaleTimeString(dateLocale, { hour: 'numeric', minute: '2-digit', timeZone: dateTimeZone })}
                                     </TableCell>
                                     <TableCell className="py-1.5 text-xs text-muted-foreground">
                                         {event.networks && event.networks.length > 0

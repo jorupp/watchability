@@ -9,7 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const GamePage = async ({ params }: {params: Promise<{ sport?: string, league: string, gameId: string }>}) => {
     const { sport, league, gameId } = await params;
     const game = await getGame(league, gameId);
-    const plays = game.page.content.gamepackage.plys;
+    const gamePackage = game.page.content.gamepackage;
+    const plays = gamePackage.plys;
+    const gameTeams = gamePackage.gmStrp?.tms ?? [];
+    const teamsById = new Map(gameTeams.map(team => [team.id, team]));
+    const homeTeam = gameTeams.find(team => team.isHome);
+    const awayTeam = gameTeams.find(team => !team.isHome);
+    const footballPlays = new Map(gamePackage.allDrives?.map(drive => [drive.lx?.id, drive.lx]));
     const analysis = analyzeGame(game, gameId);
     const teams = game?.page?.content?.gamepackage?.mtchpPrdctr?.teams;
     const sportPath = sport ?? '';
@@ -65,6 +71,7 @@ const GamePage = async ({ params }: {params: Promise<{ sport?: string, league: s
                                 <TableHeader>
                                     <TableRow className="border-border/50 bg-muted/30 hover:bg-muted/30">
                                         <TableHead className="text-xs text-muted-foreground">Period</TableHead>
+                                        <TableHead className="text-xs text-muted-foreground">Possession</TableHead>
                                         <TableHead className="text-xs text-muted-foreground">Away</TableHead>
                                         <TableHead className="text-xs text-muted-foreground">Home</TableHead>
                                         <TableHead className="text-xs text-muted-foreground">Play</TableHead>
@@ -72,10 +79,22 @@ const GamePage = async ({ params }: {params: Promise<{ sport?: string, league: s
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {plays?.map((play: { id: string, prd: number, clck: string, awyScr: number, hmScr: number, txt: string, team: string, wnPrb: number }) => {
+                                    {plays?.map(play => {
+                                        const details = footballPlays.get(play.id);
+                                        // On turnovers, tm can identify the defense. Show who started with the ball.
+                                        const possessionTeam = gamePackage.gmStrp?.nm === 'football' && details?.ld
+                                            ? (details.sa ? awayTeam : homeTeam)
+                                            : teamsById.get(play.tm ?? '');
                                         return (
                                             <TableRow key={play.id} className="border-border/30 text-xs">
                                                 <TableCell className="py-1 font-mono text-muted-foreground">P{play.prd} {play.clck}</TableCell>
+                                                <TableCell className="py-1">
+                                                    {possessionTeam ? (
+                                                        <span title={possessionTeam.displayName} className="inline-flex whitespace-nowrap rounded border border-border/50 px-1.5 py-0.5 font-medium">
+                                                            {possessionTeam.isHome ? 'Home' : 'Away'} · {possessionTeam.abbrev}
+                                                        </span>
+                                                    ) : <span className="text-muted-foreground">—</span>}
+                                                </TableCell>
                                                 <TableCell className="py-1 font-semibold">{play.awyScr}</TableCell>
                                                 <TableCell className="py-1 font-semibold">{play.hmScr}</TableCell>
                                                 <TableCell className="py-1">{play.txt}</TableCell>

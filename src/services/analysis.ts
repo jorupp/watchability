@@ -60,6 +60,8 @@ function latePossessionScore(game: Game): number {
 
     // Keep plays without WP: possession can make a game competitive even when WP says otherwise.
     for (const play of pkg.plys ?? []) {
+        // Timeout team IDs describe a stoppage, not a new possession or scoring opportunity.
+        if (/\btimeout\b/i.test(play.txt ?? '')) continue;
         if (!Number.isFinite(play.prd) || typeof play.clck !== 'string' ||
             !Number.isFinite(play.hmScr) || !Number.isFinite(play.awyScr)) continue;
         const clock = parseClock(play.clck);
@@ -103,7 +105,9 @@ function latePossessionScore(game: Game): number {
             // Scores on ESPN plays are post-play. A basket that cuts a six-point
             // deficit to three does not create another possession for the scorer.
             consider(before, previous, remaining);
-            if (clock > 0) consider(after, play, remaining);
+            // In football, a post-play team ID can be the recipient of a turnover
+            // as time expires. Count their opportunity on their own next play.
+            if (sport !== 'football' && clock > 0) consider(after, play, remaining);
         }
         possession = endOfPeriod ? undefined : after;
         previous = play;

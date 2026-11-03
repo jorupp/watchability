@@ -93,6 +93,33 @@ test('post-play scoring does not manufacture a one-possession opportunity', () =
     }
 });
 
+test('a timeout between a field goal and a failed onside kick does not create possession', () => {
+    assert.equal(score({ plays: [
+        play({ id: 'drive', clck: '1:01', awyScr: 10 }),
+        play({ id: 'field-goal', clck: '0:57', awyScr: 13, scrng: true, txt: 'Field goal good' }),
+        play({ id: 'timeout', clck: '0:57', awyScr: 13, txt: 'Timeout Home, clock 00:57', plyTypId: '21' }),
+        play({ id: 'kickoff', clck: '0:56', awyScr: 13, tm: 'home', txt: 'Onside kickoff recovered by Home', plyTypId: '53' }),
+        play({ id: 'kneel', clck: '0:40', awyScr: 13, tm: 'home', txt: 'Kneel down' }),
+    ] }), 0);
+});
+
+test('timeouts do not extend a qualifying opportunity to a later clock', () => {
+    for (const sport of ['football', 'basketball']) {
+        assert.equal(score({ sport, plays: [
+            play({ id: 'opportunity', clck: '5:00', awyScr: 18, txt: 'Player missed Jumper.' }),
+            play({ id: 'timeout', clck: '1:00', awyScr: 18, txt: 'Timeout Away, clock 01:00' }),
+        ] }), 65);
+    }
+});
+
+test('a final turnover does not create an opportunity until the receiving team runs a play', () => {
+    const turnover = play({ id: 'turnover', clck: '0:03', txt: 'Opponent pass incomplete, TURNOVER ON DOWNS' });
+    const options = { plays: [turnover], drives: [{ lx: { id: turnover.id, ld: '4th & 33' } }] };
+    assert.equal(score(options), 0);
+    assert.equal(score({ ...options, plays: [...options.plays,
+        play({ id: 'last-shot', clck: '0:00', txt: 'Away pass incomplete' })] }), 100);
+});
+
 test('basketball uses 4 points per possession and bonuses deficits of 2 or less', () => {
     for (const [deficit, expected] of [[5, 0], [4, 100], [3, 100], [2, 130], [1, 130]]) {
         assert.equal(score({ sport: 'basketball', periods: 2, periodSeconds: 1200,

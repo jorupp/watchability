@@ -202,8 +202,11 @@ export function CalendarTable({ sport, league, augmentedEvents, showDate }: {
                                         {t2.curatedRank.current < 99 ? <span className="font-bold text-amber-700 dark:text-yellow-400 mr-1">#{t2.curatedRank.current}</span> : null}
                                         <span>{t2.team.displayName}</span>
                                     </TableCell>
-                                    <TableCell className="py-1.5 text-right">
-                                        <ScoreDisplay event={event} />
+                                    <TableCell className="group/score py-1.5 text-right">
+                                        {/* Keep scores concealed until client-side favorites are known. */}
+                                        <div className={!mounted || event.isFavorite ? 'opacity-0 group-hover/score:opacity-100 focus-within:opacity-100' : undefined}>
+                                            <ScoreDisplay event={event} />
+                                        </div>
                                     </TableCell>
                                     <TableCell className="py-1.5 px-2">
                                         {event.analysisScore && event.analysisHistogram ? (

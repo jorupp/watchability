@@ -57,7 +57,7 @@ function computeGamePredictorScore(predictor: Array<{ percentage: number }>): nu
   return Math.min(...predictor.map((i) => i.percentage)) * 2;
 }
 
-function ScoreDisplay({ event }: { event: AugmentedEvent }) {
+function ScoreDisplay({ event, hideAnalysisScore }: { event: AugmentedEvent; hideAnalysisScore: boolean }) {
   if (event.analysisScore) {
     const capped = Math.min(SCORE_MAX, event.analysisScore);
     // Color-code by score: green > high threshold, yellow > medium threshold, muted otherwise
@@ -68,7 +68,7 @@ function ScoreDisplay({ event }: { event: AugmentedEvent }) {
         : 'text-muted-foreground';
     return (
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger className={hideAnalysisScore ? 'opacity-0 group-hover/score:opacity-100 focus:opacity-100' : undefined}>
           <span className={colorClass}>{capped.toFixed(1)}</span>
         </TooltipTrigger>
         <TooltipContent>
@@ -203,10 +203,8 @@ export function CalendarTable({ sport, league, augmentedEvents, showDate }: {
                                         <span>{t2.team.displayName}</span>
                                     </TableCell>
                                     <TableCell className="group/score py-1.5 text-right">
-                                        {/* Keep scores concealed until client-side favorites are known. */}
-                                        <div className={!mounted || event.isFavorite ? 'opacity-0 group-hover/score:opacity-100 focus-within:opacity-100' : undefined}>
-                                            <ScoreDisplay event={event} />
-                                        </div>
+                                        {/* Keep actual-game scores concealed until client-side favorites are known. */}
+                                        <ScoreDisplay event={event} hideAnalysisScore={!mounted || event.isFavorite} />
                                     </TableCell>
                                     <TableCell className="py-1.5 px-2">
                                         {event.analysisScore && event.analysisHistogram ? (
